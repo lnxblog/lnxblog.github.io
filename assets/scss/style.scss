@@ -28,7 +28,7 @@
 @import "partials/grid";
 
 // Mobile up base styles
-@import "breakpoints/mobileup";
+//@import "breakpoints/mobileup";
 
 // Import media queries add more as you desire
 @media only screen and (min-width: 800px) { @import "breakpoints/800up";} 
