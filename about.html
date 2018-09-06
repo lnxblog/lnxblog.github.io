@@ -187,7 +187,7 @@
 
     <section class="page-header">
       <h1 class="project-name">About</h1>
-      <h2 class="project-tagline">A few more words about this theme</h2>
+      <h2 class="project-tagline">Don&#39;t expect any fancy vocabulary</h2>
       
       <!-- Post tagline -->
       
@@ -199,9 +199,8 @@
       <article>
 
   <div>
-    <p>This is the <em>Cayman Blog</em> Jekyll theme. You can find out more info about customizing this theme, as well as basic usage documentation, and source code at: <a href="https://github.com/lorepirri/cayman-blog">cayman-blog</a></p>
-
-<p>You can find the source code for <em>Jekyll</em> at <a href="https://github.com/jekyll/jekyll">jekyll</a></p>
+    <p>This blog is a journal of the lessons I learnt while working in the Linux environment. I will try to post as often as I can but not promising anything.
+I will try to keep it strictly technical.</p>
 
 <p><a href="">Go to the Home Page</a></p>
 
@@ -244,5 +243,19 @@
     </section>
 
     
+	<script type="text/javascript">
+	(function() {
+  var pre = document.getElementsByTagName('pre'),
+    pl = pre.length;
+  for (var i = 0; i < pl; i++) {
+    pre[i].innerHTML = '<span class="line-number"></span>' + pre[i].innerHTML + '<span class="cl"></span>';
+    var num = pre[i].innerHTML.split(/\n/).length;
+    for (var j = 0; j < (num - 1); j++) {
+      var line_num = pre[i].getElementsByTagName('span')[0];
+      line_num.innerHTML += '<span>' + (j + 1) + '</span>';
+    }
+  }
+})();
+	</script>
   </body>
 </html>
