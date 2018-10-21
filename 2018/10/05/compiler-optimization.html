@@ -11,7 +11,7 @@
 
     
 
-    <title>Let's get started</title>
+    <title>Compiler optimization in GCC</title>
 
     
       <!-- Update your html tag to include the itemscope and itemtype attributes. -->
@@ -32,17 +32,19 @@
 
   <meta name="author" content="Hemanth Nandish">
 
-<meta name="description" content="This blog is a journal of my learnings while programming in Linux.
-Besides giving me an insight into the working of Operating systems, it may help yo..." />
+<meta name="description" content="The GCC provides various levels of compiler optimization. The option can be specified by -On where n contains integral values {0,1,2,3}.
+
+" />
 
 
 
 
 
 <!-- Schema.org markup for Google+ -->
-<meta itemprop="name" content="Let&#39;s get started">
-<meta itemprop="description" content="This blog is a journal of my learnings while programming in Linux.
-Besides giving me an insight into the working of Operating systems, it may help yo...">
+<meta itemprop="name" content="Compiler optimization in GCC">
+<meta itemprop="description" content="The GCC provides various levels of compiler optimization. The option can be specified by -On where n contains integral values {0,1,2,3}.
+
+">
 
   <meta itemprop="image" content="https://lazy.github.io">
 
@@ -52,9 +54,10 @@ Besides giving me an insight into the working of Operating systems, it may help 
 
 
 
-<meta name="twitter:title" content="Let&#39;s get started">
-<meta name="twitter:description" content="This blog is a journal of my learnings while programming in Linux.
-Besides giving me an insight into the working of Operating systems, it may help yo...">
+<meta name="twitter:title" content="Compiler optimization in GCC">
+<meta name="twitter:description" content="The GCC provides various levels of compiler optimization. The option can be specified by -On where n contains integral values {0,1,2,3}.
+
+">
 
 
   <meta name="twitter:creator" content="@impossible14">
@@ -65,20 +68,21 @@ Besides giving me an insight into the working of Operating systems, it may help 
   <meta name="twitter:image:src" content="https://lazy.github.io">
   <meta property="twitter:image" content="https://lazy.github.io">
 
-<meta property="twitter:url" content="https://lazy.github.io/2018/08/11/Lets-begin.html">
+<meta property="twitter:url" content="https://lazy.github.io/2018/10/05/compiler-optimization.html">
 
 <!-- Open Graph data -->
-<meta property="og:title" content="Let&#39;s get started" />
+<meta property="og:title" content="Compiler optimization in GCC" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://lazy.github.io/2018/08/11/Lets-begin.html" />
+<meta property="og:url" content="https://lazy.github.io/2018/10/05/compiler-optimization.html" />
 
   <meta property="og:image" content="https://lazy.github.io" />
 
-<meta property="og:description" content="This blog is a journal of my learnings while programming in Linux.
-Besides giving me an insight into the working of Operating systems, it may help yo..." />
+<meta property="og:description" content="The GCC provides various levels of compiler optimization. The option can be specified by -On where n contains integral values {0,1,2,3}.
+
+" />
 <meta property="og:site_name" content="LazyBlog" />
 
-  <meta property="article:published_time" content="2018-08-11T00:00:00+05:30" />
+  <meta property="article:published_time" content="2018-10-05T00:00:00+05:30" />
 
 
 
@@ -106,7 +110,7 @@ Besides giving me an insight into the working of Operating systems, it may help 
 
     
 
-    <link rel="canonical" href="/2018/08/11/Lets-begin.html">
+    <link rel="canonical" href="/2018/10/05/compiler-optimization.html">
 
     
 
@@ -196,15 +200,15 @@ Besides giving me an insight into the working of Operating systems, it may help 
     
 
     <section class="page-header">
-      <h1 class="project-name">Let&#39;s get started</h1>
+      <h1 class="project-name">Compiler optimization in GCC</h1>
       <h2 class="project-tagline"></h2>
       
       <!-- Post tagline -->
       
         <h2 class="project-date">
-        <time datetime="2018-08-11T00:00:00+05:30" itemprop="datePublished">
+        <time datetime="2018-10-05T00:00:00+05:30" itemprop="datePublished">
           
-          Aug 11, 2018
+          Oct 5, 2018
         </time>
         
         
@@ -215,7 +219,7 @@ Besides giving me an insight into the working of Operating systems, it may help 
 		
 		 <span itemprop="timeRequired"> 
 		 
-		 &nbsp;< 1 min read
+		 2 mins read 
 		 
 		 </span> 
         </h2>
@@ -228,25 +232,112 @@ Besides giving me an insight into the working of Operating systems, it may help 
       <article itemscope itemtype="http://schema.org/BlogPosting">
 
   <!-- <header class="post-header">
-    <h1 class="post-title" itemprop="name headline">Let&#39;s get started</h1>
+    <h1 class="post-title" itemprop="name headline">Compiler optimization in GCC</h1>
     <p class="post-meta">
-      <time datetime="2018-08-11T00:00:00+05:30" itemprop="datePublished">
+      <time datetime="2018-10-05T00:00:00+05:30" itemprop="datePublished">
         
-        Aug 11, 2018
+        Oct 5, 2018
       </time>
       </p>
   </header> -->
 
   <div itemprop="articleBody">
-    <p>This blog is a journal of my learnings while programming in Linux.
-Besides giving me an insight into the working of Operating systems, it may help you in learning something new.
-You may help in improving the learning curve by providing your technical feedback.</p>
+    <p>The GCC provides various levels of compiler optimization. The option can be specified by <code class="highlighter-rouge">-On</code> where n contains integral values {0,1,2,3}.</p>
+
+<p><code class="highlighter-rouge">-O0</code>
+Reduce compilation time and make debugging produce the expected results. This is the default.</p>
+
+<p><code class="highlighter-rouge">-O1</code>
+Low level optimization. The compiler tries to reduce code size and execution time, without performing any optimizations that take a great deal of compilation time.</p>
+
+<p><code class="highlighter-rouge">-O2</code>
+Medium level optimization. GCC performs nearly all supported optimizations that do not involve a space-speed tradeoff. As compared to -O1, this option increases both compilation time and the performance of the generated code.</p>
+
+<p><code class="highlighter-rouge">-O3</code>
+High level optimization. -O3 turns on all optimizations specified by -O2 and some additional optimizations, which increases the total compilation time.</p>
+
+<p>Consider the following C code snippet:</p>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="n">flag</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="k">while</span><span class="p">(</span><span class="n">flag</span><span class="p">);</span>
+<span class="p">}</span>	
+</code></pre>
+</div>
+
+<p>The following is the disassembly for an ARM architecture based device like the Raspberry Pi.
+It is compiled with <code class="highlighter-rouge">-O0</code> optimization.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>    8424:	e59f301c 	ldr	r3, [pc, #28]	; 8448 &lt;main+0x30&gt;
+    8428:	e5933000 	ldr	r3, [r3]
+    842c:	e3530000 	cmp	r3, #0
+    8430:	1afffffb 	bne	8424 &lt;main+0xc&gt;
+</code></pre>
+</div>
+<p>Register <code class="highlighter-rouge">R3</code> is loaded with the global variable <code class="highlighter-rouge">flag</code>’s value. It is compared with zero and if not equal it branches to the <code class="highlighter-rouge">0x8424</code> to repeat the procedure again.</p>
+
+<p>The following is the disassembly under <code class="highlighter-rouge">O3</code> optimization.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>    82f4:	e59f3020 	ldr	r3, [pc, #32]	; 831c &lt;main+0x28&gt;
+    82f8:	e92d4010 	push	{r4, lr}
+    82fc:	e5934000 	ldr	r4, [r3]
+    8300:	e3540000 	cmp	r4, #0
+    8304:	0a000000 	beq	830c &lt;main+0x18&gt;
+    8308:	eafffffe 	b	8308 &lt;main+0x14&gt;
+</code></pre>
+</div>
+<p>Note the instruction at <code class="highlighter-rouge">0x8308</code> the code branches to itself which although seems odd is the correct behavior expected from our program. It is faster too as there is no memory address being accessed like the previous code.</p>
+
+<p>We can avoid this kind of optimization by using a function in another source file to return the <code class="highlighter-rouge">flag</code> variable value.</p>
+
+<p>file1.c</p>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="k">while</span><span class="p">(</span><span class="n">check_var</span><span class="p">());</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>file2.c</p>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">int</span> <span class="n">flag</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="nf">check_var</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="k">return</span> <span class="n">flag</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+<p>Now when after compiling the above two source files to produce the executable and disassemble <code class="highlighter-rouge">main</code>:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&lt;main&gt;
+    [.]
+    8424:	eb000008 	bl	844c &lt;check_var&gt;
+    8428:	e1a03000 	mov	r3, r0
+    842c:	e3530000 	cmp	r3, #0
+    8430:	1afffffb 	bne	8424 &lt;main+0xc&gt;
+    [.]
+</code></pre>
+</div>
+<p>Similarly for <code class="highlighter-rouge">check_var</code>:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>&lt;check_var&gt;
+    844c:	e52db004 	push	{fp}		; (str fp, [sp, #-4]!)
+    8450:	e28db000 	add	fp, sp, #0
+    8454:	e59f3010 	ldr	r3, [pc, #16]	; 846c &lt;check_var+0x20&gt;
+    8458:	e5933000 	ldr	r3, [r3]
+    845c:	e1a00003 	mov	r0, r3
+    8460:	e24bd000 	sub	sp, fp, #0
+    8464:	e49db004 	pop	{fp}		; (ldr fp, [sp], #4)
+    8468:	e12fff1e 	bx	lr
+    846c:	00010614 	andeq	r0, r1, r4, lsl r6
+</code></pre>
+</div>
+
+<p>Register <code class="highlighter-rouge">R0</code> is used to store the return value.
+Now the program is forced to load the variable with the value at the memory address and is thus not optimized away.</p>
 
 	<div class="share-page">
     Share this on &rarr;
-    <a href="https://twitter.com/intent/tweet?text=Let's get started&url=https://lazy.github.io/2018/08/11/Lets-begin.html&via=&related=" rel="nofollow" target="_blank" title="Share on Twitter">Twitter</a>
+    <a href="https://twitter.com/intent/tweet?text=Compiler optimization in GCC&url=https://lazy.github.io/2018/10/05/compiler-optimization.html&via=&related=" rel="nofollow" target="_blank" title="Share on Twitter">Twitter</a>
     
-	<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://lazy.github.io/2018/08/11/Lets-begin.html&title=Let's get started" rel="nofollow" target="_blank" title="Share on LinkedIn">LinkedIn</a>
+	<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://lazy.github.io/2018/10/05/compiler-optimization.html&title=Compiler optimization in GCC" rel="nofollow" target="_blank" title="Share on LinkedIn">LinkedIn</a>
 </div>
 
 
