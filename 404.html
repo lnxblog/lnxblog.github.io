@@ -42,7 +42,7 @@
 <meta itemprop="name" content="404 Error">
 <meta itemprop="description" content="Offbeat Explorations in Linux">
 
-  <meta itemprop="image" content="">
+  <meta itemprop="image" content="https://lazy.github.io">
 
 
 <!-- Twitter Card data -->
@@ -59,17 +59,17 @@
 
 <!-- Twitter summary card with large image must be at least 280x150px -->
 
-  <meta name="twitter:image:src" content="">
-  <meta property="twitter:image" content="">
+  <meta name="twitter:image:src" content="https://lazy.github.io">
+  <meta property="twitter:image" content="https://lazy.github.io">
 
-<meta property="twitter:url" content="/404.html">
+<meta property="twitter:url" content="https://lazy.github.io/404.html">
 
 <!-- Open Graph data -->
 <meta property="og:title" content="404 Error" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="/404.html" />
+<meta property="og:url" content="https://lazy.github.io/404.html" />
 
-  <meta property="og:image" content="" />
+  <meta property="og:image" content="https://lazy.github.io" />
 
 <meta property="og:description" content="Offbeat Explorations in Linux" />
 <meta property="og:site_name" content="LazyBlog" />
@@ -100,7 +100,7 @@
 
     
 
-    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="shortcut icon" href="https://lazy.github.io/favicon.ico">
     <meta name="robots" content="noarchive">
 
     <!-- <link rel="alternate" media="only screen and (max-width: 640px)" href="">
@@ -201,7 +201,7 @@
   <div>
     <p>Try got get back to the Home Page and start over!</p>
 
-<p><a href="">Go to the Home Page</a></p>
+<p><a href="https://lazy.github.io">Go to the Home Page</a></p>
 
   </div>
 
@@ -242,5 +242,19 @@
     </section>
 
     
+	<script type="text/javascript">
+	(function() {
+  var pre = document.getElementsByTagName('pre'),
+    pl = pre.length;
+  for (var i = 0; i < pl; i++) {
+    pre[i].innerHTML = '<span class="line-number"></span>' + pre[i].innerHTML + '<span class="cl"></span>';
+    var num = pre[i].innerHTML.split(/\n/).length;
+    for (var j = 0; j < (num - 1); j++) {
+      var line_num = pre[i].getElementsByTagName('span')[0];
+      line_num.innerHTML += '<span>' + (j + 1) + '</span>';
+    }
+  }
+})();
+	</script>
   </body>
 </html>
