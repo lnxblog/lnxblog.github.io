@@ -284,11 +284,7 @@ It is compiled with <code class="highlighter-rouge">-O0</code> optimization.</p>
     8308:	eafffffe 	b	8308 &lt;main+0x14&gt;
 </code></pre>
 </div>
-<<<<<<< HEAD
 <p>Note the instruction at <code class="highlighter-rouge">0x8308</code> the code branches to itself which although seems odd is the correct behavior expected from our program. It is faster too as there is no memory address being accessed like the previous code.</p>
-=======
-<p>Note the instruction at <code class="highlighter-rouge">0x8308</code> the code branches to itself which although seems odd is the correct the behavior expected from our program. It is faster too as there is no memory address being accessed like the previous code.</p>
->>>>>>> 7c9e59431f20de86eacd8cfb8a508b6874dc30cb
 
 <p>We can avoid this kind of optimization by using a function in another source file to return the <code class="highlighter-rouge">flag</code> variable value.</p>
 
@@ -310,17 +306,12 @@ It is compiled with <code class="highlighter-rouge">-O0</code> optimization.</p>
 </div>
 <p>Now when after compiling the above two source files to produce the executable and disassemble <code class="highlighter-rouge">main</code>:</p>
 
-<<<<<<< HEAD
 <div class="highlighter-rouge"><pre class="highlight"><code>&lt;main&gt;
     [.]
-=======
-<pre><code class="language-&lt;main&gt;">    ...
->>>>>>> 7c9e59431f20de86eacd8cfb8a508b6874dc30cb
     8424:	eb000008 	bl	844c &lt;check_var&gt;
     8428:	e1a03000 	mov	r3, r0
     842c:	e3530000 	cmp	r3, #0
     8430:	1afffffb 	bne	8424 &lt;main+0xc&gt;
-<<<<<<< HEAD
     [.]
 </code></pre>
 </div>
@@ -328,12 +319,6 @@ It is compiled with <code class="highlighter-rouge">-O0</code> optimization.</p>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>&lt;check_var&gt;
     844c:	e52db004 	push	{fp}		; (str fp, [sp, #-4]!)
-=======
-	...
-</code></pre>
-
-<pre><code class="language-&lt;check_var&gt;">    844c:	e52db004 	push	{fp}		; (str fp, [sp, #-4]!)
->>>>>>> 7c9e59431f20de86eacd8cfb8a508b6874dc30cb
     8450:	e28db000 	add	fp, sp, #0
     8454:	e59f3010 	ldr	r3, [pc, #16]	; 846c &lt;check_var+0x20&gt;
     8458:	e5933000 	ldr	r3, [r3]
@@ -343,10 +328,7 @@ It is compiled with <code class="highlighter-rouge">-O0</code> optimization.</p>
     8468:	e12fff1e 	bx	lr
     846c:	00010614 	andeq	r0, r1, r4, lsl r6
 </code></pre>
-<<<<<<< HEAD
 </div>
-=======
->>>>>>> 7c9e59431f20de86eacd8cfb8a508b6874dc30cb
 
 <p>Register <code class="highlighter-rouge">R0</code> is used to store the return value.
 Now the program is forced to load the variable with the value at the memory address and is thus not optimized away.</p>
