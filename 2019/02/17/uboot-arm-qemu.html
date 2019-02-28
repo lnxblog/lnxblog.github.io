@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Non social metatags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#157878">
+
+    
+
+    <title>U-Boot on a virtual ARM machine using QEMU</title>
+
+    
+      <!-- Update your html tag to include the itemscope and itemtype attributes. -->
+<html itemscope itemtype="http://schema.org/Article">
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Place this data between the <head> tags of your website -->
+
+  <meta name="author" content="Hemanth Nandish">
+
+<meta name="description" content="U-boot is a bootloader primarily used in embedded systems to boot the kernel. In this article I will describe the steps required to build and deploy ..." />
+
+
+
+
+
+<!-- Schema.org markup for Google+ -->
+<meta itemprop="name" content="U-Boot on a virtual ARM machine using QEMU">
+<meta itemprop="description" content="U-boot is a bootloader primarily used in embedded systems to boot the kernel. In this article I will describe the steps required to build and deploy ...">
+
+  <meta itemprop="image" content="https://lazy.github.io">
+
+
+<!-- Twitter Card data -->
+<meta name="twitter:card" content="summary_large_image">
+
+
+
+<meta name="twitter:title" content="U-Boot on a virtual ARM machine using QEMU">
+<meta name="twitter:description" content="U-boot is a bootloader primarily used in embedded systems to boot the kernel. In this article I will describe the steps required to build and deploy ...">
+
+
+  <meta name="twitter:creator" content="@impossible14">
+
+
+<!-- Twitter summary card with large image must be at least 280x150px -->
+
+  <meta name="twitter:image:src" content="https://lazy.github.io">
+  <meta property="twitter:image" content="https://lazy.github.io">
+
+<meta property="twitter:url" content="https://lazy.github.io/2019/02/17/uboot-arm-qemu.html">
+
+<!-- Open Graph data -->
+<meta property="og:title" content="U-Boot on a virtual ARM machine using QEMU" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lazy.github.io/2019/02/17/uboot-arm-qemu.html" />
+
+  <meta property="og:image" content="https://lazy.github.io" />
+
+<meta property="og:description" content="U-boot is a bootloader primarily used in embedded systems to boot the kernel. In this article I will describe the steps required to build and deploy ..." />
+<meta property="og:site_name" content="LazyBlog" />
+
+  <meta property="article:published_time" content="2019-02-17T00:00:00+05:30" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+    
+
+    <link rel="canonical" href="/2019/02/17/uboot-arm-qemu.html">
+
+    
+
+    <link rel="shortcut icon" href="https://lazy.github.io/favicon.ico">
+    <meta name="robots" content="noarchive">
+
+    <!-- <link rel="alternate" media="only screen and (max-width: 640px)" href="">
+    <link rel="alternate" media="handheld" href=""> -->
+
+
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+  </head>
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+
+    
+      <a class="site-title" href="/">LazyBlog</a>
+    
+
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+		  
+            
+		
+            
+              
+              
+            
+          
+		  
+            
+		
+            
+              
+                <a class="page-link" href="/about.html">About</a>
+              
+            
+          
+		  
+            
+		
+            
+              
+                <a class="page-link" href="/contact.html">Contact</a>
+              
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+        </div>
+
+      </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    
+
+    <section class="page-header">
+      <h1 class="project-name">U-Boot on a virtual ARM machine using QEMU</h1>
+      <h2 class="project-tagline"></h2>
+      
+      <!-- Post tagline -->
+      
+        <h2 class="project-date">
+        <time datetime="2019-02-17T00:00:00+05:30" itemprop="datePublished">
+          
+          Feb 17, 2019
+        </time>
+        
+        
+          • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span itemprop="name">Hemanth Nandish</span></span>
+        
+		•
+		
+		
+		 <span itemprop="timeRequired"> 
+		 
+		 8 mins read 
+		 
+		 </span> 
+        </h2>
+      
+      <!-- End: Post tagline -->
+    </section>
+
+    <section class="main-content">
+
+      <article itemscope itemtype="http://schema.org/BlogPosting">
+
+  <!-- <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">U-Boot on a virtual ARM machine using QEMU</h1>
+    <p class="post-meta">
+      <time datetime="2019-02-17T00:00:00+05:30" itemprop="datePublished">
+        
+        Feb 17, 2019
+      </time>
+      </p>
+  </header> -->
+
+  <div itemprop="articleBody">
+    <p>U-boot is a bootloader primarily used in embedded systems to boot the kernel. In this article I will describe the steps required to build and deploy U-boot for an ARM based machine. Thanks to QEMU for ARM there’s no need for any physical hardware. QEMU is a free and open source hardware emulator.
+You can read more about U-boot and QEMU from their respective official websites.</p>
+
+<p>In order to begin this ensure the following is complete:</p>
+<ol>
+  <li>Install qemu for ARM package on your Linux machine. On Ubuntu the command is:
+    <div class="highlighter-rouge"><pre class="highlight"><code> sudo apt-get install qemu-system-arm
+</code></pre>
+    </div>
+  </li>
+  <li>Download and build the Linux kernel from the sources for the ARM Versatile express board.
+    <div class="highlighter-rouge"><pre class="highlight"><code>$ cd linux
+$ make ARCH=arm CROSS_COMPILE=&lt;PATH TO TOOLCHAIN&gt;/arm-none-linux-gnueabi- vexpress_defconfig
+$ make ARCH=arm CROSS_COMPILE=&lt;PATH TO TOOLCHAIN&gt;/arm-none-linux-gnueabi- zImage dtbs
+</code></pre>
+    </div>
+  </li>
+  <li>Download the U-boot source code and build the bootloader binary for the vexpress board. The name of file will be <code class="highlighter-rouge">u-boot</code>
+    <div class="highlighter-rouge"><pre class="highlight"><code>$ cd u-boot
+$ make ARCH=arm CROSS_COMPILE=&lt;PATH TO TOOLCHAIN&gt;/arm-none-linux-gnueabi- vexpress_ca9x4_defconfig
+$ make ARCH=arm CROSS_COMPILE=&lt;PATH TO TOOLCHAIN&gt;/arm-none-linux-gnueabi-
+</code></pre>
+    </div>
+  </li>
+</ol>
+
+<p>Create a file <code class="highlighter-rouge">init.c</code> and add the following contents</p>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+</span> 
+<span class="kt">void</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+	<span class="kt">char</span> <span class="n">buff</span><span class="p">[</span><span class="mi">100</span><span class="p">];</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"Enter anything"</span><span class="p">);</span>
+	<span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+	<span class="p">{</span>
+		<span class="n">scanf</span><span class="p">(</span><span class="s">"%s"</span><span class="p">,</span><span class="n">buff</span><span class="p">);</span>
+		<span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="n">buff</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+<p>Compile the file as a static binary. The file size will be bigger than a dynamically linked binary.
+Then gunzip the file using <code class="highlighter-rouge">gzip</code> tool.
+Finally using the <code class="highlighter-rouge">mkimage</code> tool create the U-boot image file. This step ensures the binary is in the correct format to be loaded by the kernel.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>$ &lt;PATH TO TOOLCHAIN&gt;/arm-none-linux-gnueabi-gcc -static init.c -o init
+$ echo init|cpio -o --format=newc &gt; initramfs
+$ gzip initramfs
+$ mkimage -A arm -O linux -T ramdisk -C gzip -n "Build Root File System" -d initramfs.gz initramfs.gz.uboot
+</code></pre>
+</div>
+
+<p>You will also need to setup a TFTP server. The folder of this server should contain</p>
+<ol>
+  <li>Kernel image (zImage)</li>
+  <li>Device tree file (vexpress-v2p-ca9.dtb)</li>
+  <li>The ramdisk image file (initramfs.gz.uboot)</li>
+</ol>
+
+<p>You can read about how to setup your TFTP server here. <a href="https://medium.com/@Sciri/configuring-a-tftp-server-on-ubuntu-for-switch-upgrades-and-maintenance-caf5b6833148"> Setup TFTP server </a></p>
+
+<p>Once complete start QEMU with following command.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>$ qemu-system-arm -M vexpress-a9 -kernel u-boot -serial stdio -append "console=ttyAMA0"
+</code></pre>
+</div>
+<p>Stop the autoboot by pressing any key. Now using the following commands load the kernel,device tree and init ramdisk.
+Run <code class="highlighter-rouge">ifconfig</code> tool on the command line and set the same IP address for the <code class="highlighter-rouge">serverip</code> environment variable.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>=&gt; dhcp
+=&gt; set serverip 192.168.0.105
+=&gt; tftp 0x62008000 zImage
+=&gt; tftp 0x623CF740 initramfs.gz.uboot
+=&gt; tftp 0x62572FD1 vexpress-v2p-ca9.dtb
+=&gt; bootz 0x62008000 0x623cf740 0x62572fd1
+</code></pre>
+</div>
+<p>The bootz command begins execution of the kernel code, the kernel performs necessary setup and hands over the control to init Ramdisk.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>fsociety@fsociety-VirtualBox:~/nfs_share$ qemu-system-arm -M vexpress-a9 -kernel u-boot  -serial stdio -append "console=ttyAMA0,115200"
+pulseaudio: set_sink_input_volume() failed
+pulseaudio: Reason: Invalid argument
+pulseaudio: set_sink_input_mute() failed
+pulseaudio: Reason: Invalid argument
+
+
+U-Boot 2019.01-00352-g2f41ade (Jan 31 2019 - 00:45:42 +0530)
+
+DRAM:  128 MiB
+WARNING: Caches not enabled
+Flash: 128 MiB
+MMC:   MMC: 0
+*** Warning - bad CRC, using default environment
+
+In:    serial
+Out:   serial
+Err:   serial
+Net:   smc911x-0
+Hit any key to stop autoboot:  0 
+=&gt; dhcp 
+smc911x: MAC 52:54:00:12:34:56
+smc911x: detected LAN9118 controller
+smc911x: phy initialized
+smc911x: MAC 52:54:00:12:34:56
+BOOTP broadcast 1
+DHCP client bound to address 10.0.2.15 (13 ms)
+*** Warning: no boot file name; using '0A00020F.img'
+Using smc911x-0 device
+TFTP from server 10.0.2.2; our IP address is 10.0.2.15
+Filename '0A00020F.img'.
+smc911x: MAC 52:54:00:12:34:56
+
+TFTP error: trying to overwrite reserved memory...
+smc911x: MAC 52:54:00:12:34:56
+=&gt; set serverip 192.168.0.105
+=&gt; tftp 0x62008000 zImage
+smc911x: MAC 52:54:00:12:34:56
+smc911x: detected LAN9118 controller
+smc911x: phy initialized
+smc911x: MAC 52:54:00:12:34:56
+Using smc911x-0 device
+TFTP from server 192.168.0.105; our IP address is 10.0.2.15; sending through gateway 10.0.2.2
+Filename 'zImage'.
+Load address: 0x62008000
+Loading: #################################################################
+	 #################################################################
+	 #################################################################
+	 #################################################################
+	 ##########
+	 1.3 MiB/s
+done
+Bytes transferred = 3962688 (3c7740 hex)
+smc911x: MAC 52:54:00:12:34:56
+=&gt; tftp 0x623CF740 initramfs.gz.uboot
+smc911x: MAC 52:54:00:12:34:56
+smc911x: detected LAN9118 controller
+smc911x: phy initialized
+smc911x: MAC 52:54:00:12:34:56
+Using smc911x-0 device
+TFTP from server 192.168.0.105; our IP address is 10.0.2.15; sending through gateway 10.0.2.2
+Filename 'initramfs.gz.uboot'.
+Load address: 0x623cf740
+Loading: #################################################################
+	 #####################################################
+	 1.2 MiB/s
+done
+Bytes transferred = 1718312 (1a3828 hex)
+smc911x: MAC 52:54:00:12:34:56
+=&gt; tftp 0x62572FD1 vexpress-v2p-ca9.dtb
+smc911x: MAC 52:54:00:12:34:56
+smc911x: detected LAN9118 controller
+smc911x: phy initialized
+smc911x: MAC 52:54:00:12:34:56
+Using smc911x-0 device
+TFTP from server 192.168.0.105; our IP address is 10.0.2.15; sending through gateway 10.0.2.2
+Filename 'vexpress-v2p-ca9.dtb'.
+Load address: 0x62572fd1
+Loading: ##
+	 409.2 KiB/s
+done
+Bytes transferred = 14692 (3964 hex)
+smc911x: MAC 52:54:00:12:34:56
+=&gt; bootz 0x62008000 0x623cf740 0x62572fd1
+Kernel image @ 0x62008000 [ 0x000000 - 0x3c7740 ]
+## Loading init Ramdisk from Legacy Image at 623cf740 ...
+   Image Name:   Build Root File System
+   Image Type:   ARM Linux RAMDisk Image (gzip compressed)
+   Data Size:    1718248 Bytes = 1.6 MiB
+   Load Address: 00000000
+   Entry Point:  00000000
+   Verifying Checksum ... OK
+## Flattened Device Tree blob at 62572fd1
+   Booting using the fdt blob at 0x62572fd1
+   Loading Ramdisk to 67cc7000, end 67e6a7e8 ... OK
+   Loading Device Tree to 67cc0000, end 67cc6963 ... OK
+
+Starting kernel ...
+
+Booting Linux on physical CPU 0x0
+Linux version 4.14.52+ (hema@hema-VirtualBox) (gcc version 4.8.3 20140303 (prerelease) (crosstool-NG linaro-1.13.1+bzr2650 - Linaro GCC 2014.03)) #2 SMP Thu Jan 31 00:47:55 IST 2019
+CPU: ARMv7 Processor [410fc090] revision 0 (ARMv7), cr=10c5387d
+CPU: PIPT / VIPT nonaliasing data cache, VIPT nonaliasing instruction cache
+OF: fdt: Machine model: V2P-CA9
+Memory policy: Data cache writeback
+CPU: All CPU(s) started in SVC mode.
+percpu: Embedded 16 pages/cpu @87eae000 s36544 r8192 d20800 u65536
+Built 1 zonelists, mobility grouping on.  Total pages: 32512
+Kernel command line: console=ttyAMA0
+log_buf_len individual max cpu contribution: 4096 bytes
+log_buf_len total cpu_extra contributions: 12288 bytes
+log_buf_len min size: 16384 bytes
+log_buf_len: 32768 bytes
+early log buf free: 14992(91%)
+PID hash table entries: 512 (order: -1, 2048 bytes)
+Dentry cache hash table entries: 16384 (order: 4, 65536 bytes)
+Inode-cache hash table entries: 8192 (order: 3, 32768 bytes)
+Memory: 118056K/131072K available (6144K kernel code, 402K rwdata, 1372K rodata, 1024K init, 170K bss, 13016K reserved, 0K cma-reserved)
+Virtual kernel memory layout:
+    vector  : 0xffff0000 - 0xffff1000   (   4 kB)
+    fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)
+    vmalloc : 0x88800000 - 0xff800000   (1904 MB)
+    lowmem  : 0x80000000 - 0x88000000   ( 128 MB)
+    modules : 0x7f000000 - 0x80000000   (  16 MB)
+      .text : 0x80008000 - 0x80700000   (7136 kB)
+      .init : 0x80900000 - 0x80a00000   (1024 kB)
+      .data : 0x80a00000 - 0x80a64b18   ( 403 kB)
+       .bss : 0x80a6bc4c - 0x80a964f4   ( 171 kB)
+SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+Hierarchical RCU implementation.
+	RCU event tracing is enabled.
+	RCU restricting CPUs from NR_CPUS=8 to nr_cpu_ids=4.
+RCU: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=4
+NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+GIC CPU mask not found - kernel will fail to boot.
+GIC CPU mask not found - kernel will fail to boot.
+L2C: platform modifies aux control register: 0x02020000 -&gt; 0x02420000
+L2C: DT/platform modifies aux control register: 0x02020000 -&gt; 0x02420000
+L2C-310 enabling early BRESP for Cortex-A9
+L2C-310 full line of zeros enabled for Cortex-A9
+L2C-310 dynamic clock gating disabled, standby mode disabled
+L2C-310 cache controller enabled, 8 ways, 128 kB
+L2C-310: CACHE_ID 0x410000c8, AUX_CTRL 0x46420001
+smp_twd: clock not found -2
+sched_clock: 32 bits at 24MHz, resolution 41ns, wraps every 89478484971ns
+clocksource: arm,sp804: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275 ns
+Failed to initialize '/smb@4000000/motherboard/iofpga@7,00000000/timer@12000': -22
+Console: colour dummy device 80x30
+Calibrating local timer... 99.64MHz.
+Calibrating delay loop... 285.08 BogoMIPS (lpj=1425408)
+pid_max: default: 32768 minimum: 301
+Mount-cache hash table entries: 1024 (order: 0, 4096 bytes)
+Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes)
+CPU: Testing write buffer coherency: ok
+CPU0: thread -1, cpu 0, socket 0, mpidr 80000000
+Setting up static identity map for 0x60100000 - 0x60100060
+Hierarchical SRCU implementation.
+smp: Bringing up secondary CPUs ...
+smp: Brought up 1 node, 1 CPU
+SMP: Total of 1 processors activated (285.08 BogoMIPS).
+CPU: All CPU(s) started in SVC mode.
+devtmpfs: initialized
+random: get_random_u32 called from bucket_table_alloc+0xe8/0x254 with crng_init=0
+VFP support v0.3: implementor 41 architecture 3 part 30 variant 9 rev 0
+clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+futex hash table entries: 1024 (order: 4, 65536 bytes)
+NET: Registered protocol family 16
+DMA: preallocated 256 KiB pool for atomic coherent allocations
+cpuidle: using governor ladder
+hw-breakpoint: debug architecture 0x4 unsupported.
+Serial: AMBA PL011 UART driver
+OF: amba_device_add() failed (-19) for /memory-controller@100e0000
+OF: amba_device_add() failed (-19) for /memory-controller@100e1000
+OF: amba_device_add() failed (-19) for /watchdog@100e5000
+10009000.uart: ttyAMA0 at MMIO 0x10009000 (irq = 35, base_baud = 0) is a PL011 rev1
+console [ttyAMA0] enabled
+1000a000.uart: ttyAMA1 at MMIO 0x1000a000 (irq = 36, base_baud = 0) is a PL011 rev1
+1000b000.uart: ttyAMA2 at MMIO 0x1000b000 (irq = 37, base_baud = 0) is a PL011 rev1
+1000c000.uart: ttyAMA3 at MMIO 0x1000c000 (irq = 38, base_baud = 0) is a PL011 rev1
+OF: amba_device_add() failed (-19) for /smb@4000000/motherboard/iofpga@7,00000000/wdt@f000
+SCSI subsystem initialized
+usbcore: registered new interface driver usbfs
+usbcore: registered new interface driver hub
+usbcore: registered new device driver usb
+Advanced Linux Sound Architecture Driver Initialized.
+clocksource: Switched to clocksource arm,sp804
+NET: Registered protocol family 2
+TCP established hash table entries: 1024 (order: 0, 4096 bytes)
+TCP bind hash table entries: 1024 (order: 1, 8192 bytes)
+TCP: Hash tables configured (established 1024 bind 1024)
+UDP hash table entries: 256 (order: 1, 8192 bytes)
+UDP-Lite hash table entries: 256 (order: 1, 8192 bytes)
+NET: Registered protocol family 1
+RPC: Registered named UNIX socket transport module.
+RPC: Registered udp transport module.
+RPC: Registered tcp transport module.
+RPC: Registered tcp NFSv4.1 backchannel transport module.
+Unpacking initramfs...
+Freeing initrd memory: 1680K
+hw perfevents: enabled with armv7_cortex_a9 PMU driver, 1 counters available
+workingset: timestamp_bits=30 max_order=15 bucket_order=0
+squashfs: version 4.0 (2009/01/31) Phillip Lougher
+jffs2: version 2.2. (NAND) © 2001-2006 Red Hat, Inc.
+9p: Installing v9fs 9p2000 file system support
+io scheduler noop registered (default)
+io scheduler mq-deadline registered
+io scheduler kyber registered
+clcd-pl11x 10020000.clcd: PL111 designer 41 rev2 at 0x10020000
+clcd-pl11x 10020000.clcd: /clcd@10020000 hardware, 1024x768@59 display
+Console: switching to colour frame buffer device 128x48
+clcd-pl11x 1001f000.clcd: PL111 designer 41 rev2 at 0x1001f000
+clcd-pl11x 1001f000.clcd: /smb@4000000/motherboard/iofpga@7,00000000/clcd@1f000 hardware, 640x480@59 display
+40000000.flash: Found 2 x16 devices at 0x0 in 32-bit bank. Manufacturer ID 0x000000 Chip ID 0x000000
+Intel/Sharp Extended Query Table at 0x0031
+Using buffer write method
+40000000.flash: Found 2 x16 devices at 0x0 in 32-bit bank. Manufacturer ID 0x000000 Chip ID 0x000000
+Intel/Sharp Extended Query Table at 0x0031
+Using buffer write method
+Concatenating MTD devices:
+(0): "40000000.flash"
+(1): "40000000.flash"
+into device "40000000.flash"
+libphy: Fixed MDIO Bus: probed
+libphy: smsc911x-mdio: probed
+smsc911x 4e000000.ethernet eth0: MAC Address: 52:54:00:12:34:56
+isp1760 4f000000.usb: bus width: 32, oc: digital
+isp1760 4f000000.usb: NXP ISP1760 USB Host Controller
+isp1760 4f000000.usb: new USB bus registered, assigned bus number 1
+isp1760 4f000000.usb: Scratch test failed.
+isp1760 4f000000.usb: can't setup: -19
+isp1760 4f000000.usb: USB bus 1 deregistered
+usbcore: registered new interface driver usb-storage
+rtc-pl031 10017000.rtc: rtc core: registered pl031 as rtc0
+IR NEC protocol handler initialized
+IR RC5(x/sz) protocol handler initialized
+IR RC6 protocol handler initialized
+IR JVC protocol handler initialized
+IR Sony protocol handler initialized
+IR SANYO protocol handler initialized
+IR Sharp protocol handler initialized
+IR MCE Keyboard/mouse protocol handler initialized
+IR XMP protocol handler initialized
+mmci-pl18x 10005000.mmci: /aliases ID not available
+mmci-pl18x 10005000.mmci: Got CD GPIO
+mmci-pl18x 10005000.mmci: Got WP GPIO
+mmci-pl18x 10005000.mmci: mmc0: PL181 manf 41 rev0 at 0x10005000 irq 31,32 (pio)
+input: AT Raw Set 2 keyboard as /devices/platform/smb@4000000/smb@4000000:motherboard/smb@4000000:motherboard:iofpga@7,00000000/10006000.kmi/serio0/input/input0
+ledtrig-cpu: registered to indicate activity on CPUs
+usbcore: registered new interface driver usbhid
+usbhid: USB HID core driver
+aaci-pl041 10004000.aaci: ARM AC'97 Interface PL041 rev0 at 0x10004000, irq 30
+aaci-pl041 10004000.aaci: FIFO 512 entries
+oprofile: using arm/armv7-ca9
+NET: Registered protocol family 17
+9pnet: Installing 9P2000 support
+Registering SWP/SWPB emulation handler
+rtc-pl031 10017000.rtc: setting system clock to 2019-02-27 19:21:54 UTC (1551295314)
+ALSA device list:
+  #0: ARM AC'97 Interface PL041 rev0 at 0x10004000, irq 30
+Freeing unused kernel memory: 1024K
+input: ImExPS/2 Generic Explorer Mouse as /devices/platform/smb@4000000/smb@4000000:motherboard/smb@4000000:motherboard:iofpga@7,00000000/10007000.kmi/serio1/input/input2
+Enter anything     
+hello
+hello
+</code></pre>
+</div>
+<p>You can observe the simple code we had compiled earlier is executed at the end after kernel starts the init RAMdisk.</p>
+
+
+	<div class="share-page">
+    Share this on &rarr;
+    <a href="https://twitter.com/intent/tweet?text=U-Boot on a virtual ARM machine using QEMU&url=https://lazy.github.io/2019/02/17/uboot-arm-qemu.html&via=&related=" rel="nofollow" target="_blank" title="Share on Twitter">Twitter</a>
+    
+	<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://lazy.github.io/2019/02/17/uboot-arm-qemu.html&title=U-Boot on a virtual ARM machine using QEMU" rel="nofollow" target="_blank" title="Share on LinkedIn">LinkedIn</a>
+</div>
+
+
+  </div>
+
+  
+  <div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://lazyblog-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</article>
+
+
+      <footer class="site-footer">
+	  
+        <!-- SVG icons from https://iconmonstr.com -->
+		
+        <!-- Github icon 
+        <span class="my-span-icon">
+          <a href="https://github.com/hemanthnandish" aria-label="hemanth nandish's GitHub" title="hemanth nandish's GitHub">
+            <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.9310-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+        </span>
+		
+    
+        <span class="my-span-icon">
+          <a href="https://twitter.com/impossible14" aria-label="hemanth nandish's Twitter" title="hemanth nandish's Twitter">
+            <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.066 9.645c.183 4.04-2.83 8.544-8.164 8.544-1.622 0-3.131-.476-4.402-1.291 1.524.18 3.045-.244 4.252-1.189-1.256-.023-2.317-.854-2.684-1.995.451.086.895.061 1.298-.049-1.381-.278-2.335-1.522-2.304-2.853.388.215.83.344 1.301.359-1.279-.855-1.641-2.544-.889-3.835 1.416 1.738 3.533 2.881 5.92 3.001-.419-1.796.944-3.527 2.799-3.527.825 0 1.572.349 2.096.907.654-.128 1.27-.368 1.824-.697-.215.671-.67 1.233-1.263 1.589.581-.07 1.135-.224 1.649-.453-.384.578-.87 1.084-1.433 1.489z"/></svg>
+          </a>
+        </span>
+
+   
+        
+ 
+        
+        
+          <span class="my-span-icon">
+            <a href="/about.html" aria-label="Contact" title="Contact hemanth nandish">
+              <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .02c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.99 6.98l-6.99 5.666-6.991-5.666h13.981zm.01 10h-14v-8.505l7 5.673 7-5.672v8.504z"/></svg>
+            </a>
+          </span>
+        
+		-->
+      </footer>
+    </section>
+
+    
+	<script type="text/javascript">
+	(function() {
+  var pre = document.getElementsByTagName('pre'),
+    pl = pre.length;
+  for (var i = 0; i < pl; i++) {
+    pre[i].innerHTML = '<span class="line-number"></span>' + pre[i].innerHTML + '<span class="cl"></span>';
+    var num = pre[i].innerHTML.split(/\n/).length;
+    for (var j = 0; j < (num - 1); j++) {
+      var line_num = pre[i].getElementsByTagName('span')[0];
+      line_num.innerHTML += '<span>' + (j + 1) + '</span>';
+    }
+  }
+})();
+	</script>
+  </body>
+</html>
