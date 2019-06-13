@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Non social metatags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#157878">
+
+    
+
+    <title>Memory organization of strings in C</title>
+
+    
+      <!-- Update your html tag to include the itemscope and itemtype attributes. -->
+<html itemscope itemtype="http://schema.org/Article">
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Place this data between the <head> tags of your website -->
+
+  <meta name="author" content="Hemanth Nandish">
+
+<meta name="description" content="One of the most common uses of the character data type is the creation of an array of characters also known as strings.
+Strings can be declared and i..." />
+
+
+
+
+
+<!-- Schema.org markup for Google+ -->
+<meta itemprop="name" content="Memory organization of strings in C">
+<meta itemprop="description" content="One of the most common uses of the character data type is the creation of an array of characters also known as strings.
+Strings can be declared and i...">
+
+  <meta itemprop="image" content="https://lazyblog.github.io">
+
+
+<!-- Twitter Card data -->
+<meta name="twitter:card" content="summary_large_image">
+
+
+
+<meta name="twitter:title" content="Memory organization of strings in C">
+<meta name="twitter:description" content="One of the most common uses of the character data type is the creation of an array of characters also known as strings.
+Strings can be declared and i...">
+
+
+
+<!-- Twitter summary card with large image must be at least 280x150px -->
+
+  <meta name="twitter:image:src" content="https://lazyblog.github.io">
+  <meta property="twitter:image" content="https://lazyblog.github.io">
+
+<meta property="twitter:url" content="https://lazyblog.github.io/2018/08/14/strings-in-c.html">
+
+<!-- Open Graph data -->
+<meta property="og:title" content="Memory organization of strings in C" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lazyblog.github.io/2018/08/14/strings-in-c.html" />
+
+  <meta property="og:image" content="https://lazyblog.github.io" />
+
+<meta property="og:description" content="One of the most common uses of the character data type is the creation of an array of characters also known as strings.
+Strings can be declared and i..." />
+<meta property="og:site_name" content="LazyBlog" />
+
+  <meta property="article:published_time" content="2018-08-14T00:00:00+05:30" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+    
+
+    <link rel="canonical" href="/2018/08/14/strings-in-c.html">
+
+    
+
+    <link rel="shortcut icon" href="https://lazyblog.github.io/favicon.ico">
+    <meta name="robots" content="noarchive">
+
+    <!-- <link rel="alternate" media="only screen and (max-width: 640px)" href="">
+    <link rel="alternate" media="handheld" href=""> -->
+
+
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+  </head>
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+
+    
+      <a class="site-title" href="/">LazyBlog</a>
+    
+
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+		  
+            
+		
+            
+              
+              
+            
+          
+		  
+            
+		
+            
+              
+                <a class="page-link" href="/about.html">About</a>
+              
+            
+          
+		  
+            
+		
+            
+              
+                <a class="page-link" href="/contact.html">Contact</a>
+              
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+        </div>
+
+      </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    
+
+    <section class="page-header">
+      <h1 class="project-name">Memory organization of strings in C</h1>
+      <h2 class="project-tagline"></h2>
+      
+      <!-- Post tagline -->
+      
+        <h2 class="project-date">
+        <time datetime="2018-08-14T00:00:00+05:30" itemprop="datePublished">
+          
+          Aug 14, 2018
+        </time>
+        
+        
+          • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span itemprop="name">Hemanth Nandish</span></span>
+        
+		•
+		
+		
+		 <span itemprop="timeRequired"> 
+		 
+		 3 mins read 
+		 
+		 </span> 
+        </h2>
+      
+      <!-- End: Post tagline -->
+    </section>
+
+    <section class="main-content">
+
+      <article itemscope itemtype="http://schema.org/BlogPosting">
+
+  <!-- <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Memory organization of strings in C</h1>
+    <p class="post-meta">
+      <time datetime="2018-08-14T00:00:00+05:30" itemprop="datePublished">
+        
+        Aug 14, 2018
+      </time>
+      </p>
+  </header> -->
+
+  <div itemprop="articleBody">
+    <p>One of the most common uses of the character data type is the creation of an array of characters also known as strings.
+Strings can be declared and initialized in two ways.</p>
+<h3 id="method-1">Method 1</h3>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">char</span> <span class="o">*</span><span class="n">a</span> <span class="o">=</span> <span class="s">"hello"</span><span class="p">;</span>
+</code></pre>
+</div>
+<p>This declares a pointer to a string literal. The contents at the address pointed to by the pointer cannot be modified as it exists in the read only part of the memory of the process.</p>
+
+<p>In the first method a is a pointer containing the address to the read only part of the memory containing ‘hello’.
+Here ‘a’ is a pointer to the string literal “hello”.</p>
+
+<p>I have compiled the code for the ARMv7 architecture, a Raspberry Pi 3B to be specific.
+Here’s the disassembly of the program</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>000083e4 &lt;main&gt;:
+    83e4:	e52db004 	push	{fp}		; (str fp, [sp, #-4]!)
+    83e8:	e28db000 	add	fp, sp, #0
+    83ec:	e24dd00c 	sub	sp, sp, #12
+    83f0:	e59f3010 	ldr	r3, [pc, #16]	; 8408 &lt;main+0x24&gt;
+    83f4:	e50b3008 	str	r3, [fp, #-8]
+    83f8:	e1a00003 	mov	r0, r3
+    83fc:	e24bd000 	sub	sp, fp, #0
+    8400:	e49db004 	pop	{fp}		; (ldr fp, [sp], #4)
+    8404:	e12fff1e 	bx	lr
+    8408:	0000847c 	andeq	r8, r0, ip, ror r4
+	
+00008478 &lt;_IO_stdin_used&gt;:
+    8478:	00020001 	andeq	r0, r2, r1
+    847c:	6c6c6568 	cfstr64vs	mvdx6, [ip], #-416	; 0xfffffe60
+    8480:	0000006f 	andeq	r0, r0, pc, rrx
+</code></pre>
+</div>
+<p>As you can see in line 5, register R3 is loaded with the value stored at address 0x8408 which is the address to the string in the read only part of the program.
+In line 6 this address to the string is stored on the stack, in other words the pointer ‘a’ is created.</p>
+
+<h3 id="method-2">Method 2</h3>
+<p>In the second method an array is created on the stack to where the characters of the string are copied.</p>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">char</span> <span class="n">b</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="s">"hello"</span><span class="p">;</span>
+</code></pre>
+</div>
+<p>This declares an array of characters on the stack. The contents of array can be modified as it is on the stack which is permitted for read and write.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>000083e4 &lt;main&gt;:
+    83e4:	e52db004 	push	{fp}		; (str fp, [sp, #-4]!)
+    83e8:	e28db000 	add	fp, sp, #0
+    83ec:	e24dd00c 	sub	sp, sp, #12
+    83f0:	e59f2020 	ldr	r2, [pc, #32]	; 8418 &lt;main+0x34&gt;
+    83f4:	e24b300c 	sub	r3, fp, #12
+    83f8:	e8920003 	ldm	r2, {r0, r1}
+    83fc:	e5830000 	str	r0, [r3]
+    8400:	e2833004 	add	r3, r3, #4
+    8404:	e1c310b0 	strh	r1, [r3]
+    8408:	e1a00003 	mov	r0, r3
+    840c:	e24bd000 	sub	sp, fp, #0
+    8410:	e49db004 	pop	{fp}		; (ldr fp, [sp], #4)
+    8414:	e12fff1e 	bx	lr
+    8418:	0000848c 	andeq	r8, r0, ip, lsl #9
+
+00008488 &lt;_IO_stdin_used&gt;:
+    8488:	00020001 	andeq	r0, r2, r1
+    848c:	6c6c6568 	cfstr64vs	mvdx6, [ip], #-416	; 0xfffffe60
+    8490:	0000006f 	andeq	r0, r0, pc, rrx
+</code></pre>
+</div>
+<p>In line 4 the stack size is increased. In line 5 register R2 is loaded with address to the string. R3 is loaded with address to top of stack <code class="highlighter-rouge">r3 = fp - 12</code>.
+R0 and R1 are loaded with the string values.In line 8, R0 contents are written to the stack. Similarly halfword of R1 is stored onto stack.</p>
+
+<h2 id="array-of-strings">Array of strings</h2>
+
+<p>Array of strings can be declared in two methods.</p>
+<h3 id="method-1-1">Method 1</h3>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">char</span> <span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">][</span><span class="mi">6</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="s">"hello"</span><span class="p">,</span><span class="s">"world"</span><span class="p">};</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"%p %s"</span><span class="p">,</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</code></pre>
+</div>
+<p>On executing this program you will see the following output.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>0x7fff80afe6b0 hello
+</code></pre>
+</div>
+<p>When you run the program a second time you may see a different output.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>0x7fff48b07260 hello
+</code></pre>
+</div>
+<p>This is because the array is being created on the stack. The <code class="highlighter-rouge">hello</code> string is copied to the stack as depicted in method 2. So the address contained in <code class="highlighter-rouge">a[0]</code> is of the stack memory which is created during runtime and hence random.</p>
+
+<h3 id="method-2-1">Method 2</h3>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">char</span> <span class="o">*</span><span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">=</span><span class="p">{</span><span class="s">"hello"</span><span class="p">,</span><span class="s">"world"</span><span class="p">};</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"%p %p %s"</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="o">*</span><span class="n">a</span><span class="p">,</span><span class="o">*</span><span class="n">a</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>Output</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>0x7fffe7f4bae0 0x400604 hello
+</code></pre>
+</div>
+
+<p>When its a run a second time.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>0x7fff8973fe60 0x400604 hello
+</code></pre>
+</div>
+
+<p>So the program creates an array of pointers on the stack, where each pointer contains the address of <code class="highlighter-rouge">hello</code> string in the read only data section of the program.</p>
+
+<p>Be sure to leave your thoughts in the comment section below.</p>
+
+
+	<div class="share-page">
+    Share this on &rarr;
+    <a href="https://twitter.com/intent/tweet?text=Memory organization of strings in C&url=https://lazyblog.github.io/2018/08/14/strings-in-c.html&via=impossible14&related=impossible14" rel="nofollow" target="_blank" title="Share on Twitter">Twitter</a>
+    
+	<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://lazyblog.github.io/2018/08/14/strings-in-c.html&title=Memory organization of strings in C" rel="nofollow" target="_blank" title="Share on LinkedIn">LinkedIn</a>
+</div>
+
+
+  </div>
+
+  
+  <div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://lazyblog-1.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</article>
+
+
+      <footer class="site-footer">
+	  
+        <!-- SVG icons from https://iconmonstr.com -->
+		
+        <!-- Github icon 
+        <span class="my-span-icon">
+          <a href="https://github.com/hemanthnandish" aria-label="hemanth nandish's GitHub" title="hemanth nandish's GitHub">
+            <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.9310-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+        </span>
+		
+    
+        <span class="my-span-icon">
+          <a href="https://twitter.com/" aria-label="hemanth nandish's Twitter" title="hemanth nandish's Twitter">
+            <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.066 9.645c.183 4.04-2.83 8.544-8.164 8.544-1.622 0-3.131-.476-4.402-1.291 1.524.18 3.045-.244 4.252-1.189-1.256-.023-2.317-.854-2.684-1.995.451.086.895.061 1.298-.049-1.381-.278-2.335-1.522-2.304-2.853.388.215.83.344 1.301.359-1.279-.855-1.641-2.544-.889-3.835 1.416 1.738 3.533 2.881 5.92 3.001-.419-1.796.944-3.527 2.799-3.527.825 0 1.572.349 2.096.907.654-.128 1.27-.368 1.824-.697-.215.671-.67 1.233-1.263 1.589.581-.07 1.135-.224 1.649-.453-.384.578-.87 1.084-1.433 1.489z"/></svg>
+          </a>
+        </span>
+
+   
+        
+ 
+        
+        
+          <span class="my-span-icon">
+            <a href="/about.html" aria-label="Contact" title="Contact hemanth nandish">
+              <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .02c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.99 6.98l-6.99 5.666-6.991-5.666h13.981zm.01 10h-14v-8.505l7 5.673 7-5.672v8.504z"/></svg>
+            </a>
+          </span>
+        
+		-->
+      </footer>
+    </section>
+
+    
+	<script type="text/javascript">
+	(function() {
+  var pre = document.getElementsByTagName('pre'),
+    pl = pre.length;
+  for (var i = 0; i < pl; i++) {
+    pre[i].innerHTML = '<span class="line-number"></span>' + pre[i].innerHTML + '<span class="cl"></span>';
+    var num = pre[i].innerHTML.split(/\n/).length;
+    for (var j = 0; j < (num - 1); j++) {
+      var line_num = pre[i].getElementsByTagName('span')[0];
+      line_num.innerHTML += '<span>' + (j + 1) + '</span>';
+    }
+  }
+})();
+	</script>
+  </body>
+</html>
