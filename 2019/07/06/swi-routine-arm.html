@@ -239,7 +239,7 @@
   <div itemprop="articleBody">
     <p>Software interrupts are synchronous interrupts. They are provided by almost all architectures as an instruction. It is generally used in the implementation of system calls. In the ARM ISA the instruction <code class="highlighter-rouge">svc</code> is used to invoke a software interrupt which causes the system to enter <code class="highlighter-rouge">supervisor mode</code> and execute the vector routine for the same. Here i will provide a concise explanation of the software interrupt routine for the ARM v7 or ARM 32-bit architecture.</p>
 
-<p><strong><em>linux/arch/arm/kernel/entry-common.S</em></strong></p>
+<p><strong><em>arch/arm/kernel/entry-common.S</em></strong></p>
 <div class="highlighter-rouge"><pre class="highlight"><code>ENTRY(vector_swi)
 
 	[ ... ]
@@ -288,7 +288,7 @@ NATIVE(4, sys_write)
 </div>
 <p>The syscall routines are static functions whose addresses make up the <code class="highlighter-rouge">sys_call_table</code>. Taking the fork system call as an example,the <code class="highlighter-rouge">sys_call_table</code> entry is <code class="highlighter-rouge">sys_fork</code>. The definition of this routine is held in <code class="highlighter-rouge">linux/fork.c</code>. The syscall definitions like the fork here is independent of processor architecture of the underlying system.</p>
 
-<p><strong><em>linux/kernel/fork.c</em></strong></p>
+<p><strong><em>kernel/fork.c</em></strong></p>
 <div class="highlighter-rouge"><pre class="highlight"><code>#ifdef __ARCH_WANT_SYS_FORK
 SYSCALL_DEFINE0(fork)
 {
@@ -303,7 +303,7 @@ SYSCALL_DEFINE0(fork)
 <p>Ultimately the core details of the forking process is defined in <code class="highlighter-rouge">_do_fork</code>
 The <code class="highlighter-rouge">SYSCALL_DEFINE0</code> is macro specifying that this system call accepts zero arguments. The macro is defined in <code class="highlighter-rouge">syscalls.h</code>.</p>
 
-<p><strong><em>linux/include/linux/syscalls.h</em></strong></p>
+<p><strong><em>include/linux/syscalls.h</em></strong></p>
 <div class="highlighter-rouge"><pre class="highlight"><code>#define SYSCALL_DEFINE0(sname)					\
 	SYSCALL_METADATA(_##sname, 0);				\
 	asmlinkage long sys_##sname(void)
