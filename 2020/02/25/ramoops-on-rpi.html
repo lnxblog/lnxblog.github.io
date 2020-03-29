@@ -11,7 +11,7 @@
 
     
 
-    <title>Page tables in Linux</title>
+    <title>RAMoops panic logger on Raspberry Pi</title>
 
     
       <!-- Update your html tag to include the itemscope and itemtype attributes. -->
@@ -32,15 +32,15 @@
 
   <meta name="author" content="Hemanth Nandish">
 
-<meta name="description" content="Linux employs virtual addresses instead of physical addresses to isolate each process’s address space and provide greater security. But ultimately ac..." />
+<meta name="description" content="There is a neat feature in Linux and I decided to write it up before I forget it. Has your system ever gone into a reset and you wished that the kern..." />
 
 
 
 
 
 <!-- Schema.org markup for Google+ -->
-<meta itemprop="name" content="Page tables in Linux">
-<meta itemprop="description" content="Linux employs virtual addresses instead of physical addresses to isolate each process’s address space and provide greater security. But ultimately ac...">
+<meta itemprop="name" content="RAMoops panic logger on Raspberry Pi">
+<meta itemprop="description" content="There is a neat feature in Linux and I decided to write it up before I forget it. Has your system ever gone into a reset and you wished that the kern...">
 
   <meta itemprop="image" content="https://lnxblog.github.io">
 
@@ -50,8 +50,8 @@
 
 
 
-<meta name="twitter:title" content="Page tables in Linux">
-<meta name="twitter:description" content="Linux employs virtual addresses instead of physical addresses to isolate each process’s address space and provide greater security. But ultimately ac...">
+<meta name="twitter:title" content="RAMoops panic logger on Raspberry Pi">
+<meta name="twitter:description" content="There is a neat feature in Linux and I decided to write it up before I forget it. Has your system ever gone into a reset and you wished that the kern...">
 
 
 
@@ -60,19 +60,19 @@
   <meta name="twitter:image:src" content="https://lnxblog.github.io">
   <meta property="twitter:image" content="https://lnxblog.github.io">
 
-<meta property="twitter:url" content="https://lnxblog.github.io/2019/12/16/page-table-linux.html">
+<meta property="twitter:url" content="https://lnxblog.github.io/2020/02/25/ramoops-on-rpi.html">
 
 <!-- Open Graph data -->
-<meta property="og:title" content="Page tables in Linux" />
+<meta property="og:title" content="RAMoops panic logger on Raspberry Pi" />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://lnxblog.github.io/2019/12/16/page-table-linux.html" />
+<meta property="og:url" content="https://lnxblog.github.io/2020/02/25/ramoops-on-rpi.html" />
 
   <meta property="og:image" content="https://lnxblog.github.io" />
 
-<meta property="og:description" content="Linux employs virtual addresses instead of physical addresses to isolate each process’s address space and provide greater security. But ultimately ac..." />
+<meta property="og:description" content="There is a neat feature in Linux and I decided to write it up before I forget it. Has your system ever gone into a reset and you wished that the kern..." />
 <meta property="og:site_name" content="LNXBlog" />
 
-  <meta property="article:published_time" content="2019-12-16T00:00:00+05:30" />
+  <meta property="article:published_time" content="2020-02-25T00:00:00+05:30" />
 
 
 
@@ -100,7 +100,7 @@
 
     
 
-    <link rel="canonical" href="/2019/12/16/page-table-linux.html">
+    <link rel="canonical" href="/2020/02/25/ramoops-on-rpi.html">
 
     
 
@@ -200,15 +200,15 @@
     
 
     <section class="page-header">
-      <h1 class="project-name">Page tables in Linux</h1>
+      <h1 class="project-name">RAMoops panic logger on Raspberry Pi</h1>
       <h2 class="project-tagline"></h2>
       
       <!-- Post tagline -->
       
         <h2 class="project-date">
-        <time datetime="2019-12-16T00:00:00+05:30" itemprop="datePublished">
+        <time datetime="2020-02-25T00:00:00+05:30" itemprop="datePublished">
           
-          Dec 16, 2019
+          Feb 25, 2020
         </time>
         
         
@@ -219,7 +219,7 @@
 		
 		 <span itemprop="timeRequired"> 
 		 
-		 3 mins read 
+		 2 mins read 
 		 
 		 </span> 
         </h2>
@@ -232,114 +232,108 @@
       <article itemscope itemtype="http://schema.org/BlogPosting">
 
   <!-- <header class="post-header">
-    <h1 class="post-title" itemprop="name headline">Page tables in Linux</h1>
+    <h1 class="post-title" itemprop="name headline">RAMoops panic logger on Raspberry Pi</h1>
     <p class="post-meta">
-      <time datetime="2019-12-16T00:00:00+05:30" itemprop="datePublished">
+      <time datetime="2020-02-25T00:00:00+05:30" itemprop="datePublished">
         
-        Dec 16, 2019
+        Feb 25, 2020
       </time>
       </p>
   </header> -->
 
   <div itemprop="articleBody">
-    <p>Linux employs virtual addresses instead of physical addresses to isolate each process’s address space and provide greater security. But ultimately accessing the physical memory will require that the memory controller be provided with a physical address to access the physical memory.</p>
+    <p>There is a neat feature in Linux and I decided to write it up before I forget it. Has your system ever gone into a reset and you wished that the kernel panic logs were somehow preserved?</p>
 
-<p>In order to achieve this, Linux stores a table of mappings containing virtual to physical memory mappings of each process. But this is not a simple one-to-one mapping as this would require a lot of space in the physical memory. Instead Linux uses a 3 page table approach. The virtual address bits are seperated into four distinct fields each of which helps in naviagting the page table structures
-The 3 page tables are</p>
-<ol>
-  <li>Page Global Directory (PGD)</li>
-  <li>Page Middle Directory (PMD)</li>
-  <li>Page Table Entries (PTE)</li>
-</ol>
+<p>We can ensure logging of kernel OOPS situations by enabling the ramoops feature present in the Linux kernel. The access to these logs is provided using the Pstore filesystem interface. I will demonstrate the setup for a Raspberry Pi board.</p>
 
-<p>Recently Linux has been updated to handle another page table between PGD and PMD called Page Upper Direcory (PUD). Note that page table implementation is architecture specific.
-But for the case of ARM 32 bit, there are only two page tables used, PGD and PTE as we will shortly see.</p>
-
-<h2 id="walking-the-table">Walking the Table</h2>
-<p>The following diagram helps explain the page table layout better.</p>
-
-<p><img src="https://www.kernel.org/doc/gorman/html/understand/understand-html006.png" alt="Linux Page tables" /></p>
-
-<p>PGD is an array of <code class="highlighter-rouge">pgd_t</code> members, PMD is an array of <code class="highlighter-rouge">pmd_t</code> members and PTE is an array of <code class="highlighter-rouge">pte_t</code> members.
-Each process is represented by a <code class="highlighter-rouge">task_struct</code> structure which contains a pointer to <code class="highlighter-rouge">mm_struct</code>, another structure containing information on the virtual memory areas of the process. Within <code class="highlighter-rouge">mm_struct</code> a pointer to its own Page Global Directory exists.
-Before reading the page tables, we acquire the page table lock member of the <code class="highlighter-rouge">mm_struct</code> using spinlock API.
-The kernel API offers methods required to find the offset within each table.
-The offset within the PGD table is obtained by right shifting the bits of the virtual address by <code class="highlighter-rouge">PGDIR_SHIFT</code> and adding the value to the PGD pointer.</p>
-<div class="highlighter-rouge"><pre class="highlight"><code>pgd_offset(mm, addr) *** mm is the `mm_struct` and addr is the virtual address
+<h3 id="enable-pstore-in-the-kernel">Enable Pstore in the kernel</h3>
+<p>We will need to build the kernel with Pstore option enable. Modify the .config file to add the following option.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>CONFIG_PSTORE=y
+CONFIG_PSTORE_RAM=y
 </code></pre>
 </div>
-<p>From the previous step we have the PUD entry.
-To find the offset within PUD the <code class="highlighter-rouge">pud_offset(pgd_offset_entry, addr)</code> is used, but for ARMv7 there is no PUD table and this function simply returns the pgd offset entry from the previous step.</p>
+<p>While building the kernel, you will be asked to select the compression method for the logs, ftrace support and some more extras, go ahead and provide Yes to all of them.
+Once the kernel is built, rename the zImage file as kernel7 and copy it into the boot partition of the RPi’s SD card</p>
+<h3 id="add-a-device-tree-overlay">Add a Device Tree Overlay</h3>
+<p>In order for ramoops to work, we need to reserve a region of the RAM area for the logs to be stored. This is done by adding a device tree overlay which will be picked by the kernel during boot and used along with the main device tree (DTB) file.</p>
 
-<p>Next we have PMD table and the <code class="highlighter-rouge">pmd_offset(pud_offset_entry, addr)</code> provides the offset entry but as I observed that this value was simply the return of the pud_offset_entry which is in turn the pgd_offset_entry.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>/dts-v1/;
+/plugin/;
 
-<p>Finally the PTE table provides the pte_t entry containing the address to the <code class="highlighter-rouge">page</code> struct. The function <code class="highlighter-rouge">pte_offset_map(pmd_offset_entry, addr)</code> is used to handle this.
-Once we have located the page containing our address, we have to find the offset of the location within the page. Each page in ARMv7 is configured to be of 4096 bytes or 2^12. We find the offset within the page by using the lowermost 12 bits.</p>
+/ {
+	compatible = "brcm,bcm2710";
 
-<h2 id="experiment">Experiment</h2>
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			reserved-memory {
+				#address-cells = &lt;1&gt;;
+				#size-cells = &lt;1&gt;;
+				ranges;
 
-<p>I wanted to experiment with page tables and wrote a kernel module to perform page table traversal. It works as follows</p>
-<ol>
-  <li>Provide the process ID (PID) and address of a variable to the kernel module’s device descriptor. This can be done using the <code class="highlighter-rouge">echo</code> command.</li>
-  <li>The kernel module obtains the <code class="highlighter-rouge">task_struct</code> using the PID.</li>
-  <li>Obtain the <code class="highlighter-rouge">mm_struct</code> and the pgd pointer. Traverse the page tables using the page table offset APIs.</li>
-  <li>Find the page struct from the PTE entry</li>
-  <li>Perform temporary mapping of the page using <code class="highlighter-rouge">kmap_atomic</code> and find offset within page from the virtual address.</li>
-  <li>Read the value at the address and print the contents.</li>
-</ol>
+				ramoops: ramoops@039900000 {
+					compatible = "ramoops";
+					reg = &lt;0x39900000 0x100000&gt;; 
+					record-size = &lt;0x4000&gt;; 
+					console-size = &lt;0&gt;; /* disabled by default */
+				};
+			};
+		};
+	};
 
-<h3 id="test-code">Test code</h3>
-<p>I used the following simple code and will try to read the contents of variable <code class="highlighter-rouge">a</code></p>
-<pre><code class="language-C">#include &lt;stdio.h&gt;
-
-int main()
-{
-	int a=8055;
-	printf("%p\n",&amp;a);
-	while(1);
-}
+	__overrides__ {
+		total-size = &lt;&amp;ramoops&gt;,"reg:4";
+		record-size = &lt;&amp;ramoops&gt;,"record-size:0";
+		console-size = &lt;&amp;ramoops&gt;,"console-size:0";
+	};
+};
 </code></pre>
-<p>Running the program will print the address of <code class="highlighter-rouge">a</code></p>
-<div class="highlighter-rouge"><pre class="highlight"><code>$ ./test_code &amp;
-[1] 614
-0x7e9e6c24
+</div>
+<p>The Pi that I am using comes with 1GB of RAM, so the upper limit on the physical address is <code class="highlighter-rouge">0x40000000</code>. I chose to create the ramoops area from <code class="highlighter-rouge">0x39900000</code> for a length of <code class="highlighter-rouge">0x100000</code>.</p>
+
+<p>Save the above contents as ramoops_overlay.dts and compile it using the Device Tree Compiler present at scripts/dtc/dtc in the kernel sources.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ./scripts/dtc/dtc -@ -I dts -O dtb -o ramoops.dtbo ramoops-overlay.dts
+</code></pre>
+</div>
+<p>Copy the ramoops.dtbo file into the <code class="highlighter-rouge">overlays</code> folder of the boot partition of the SD card.</p>
+
+<p>Add <code class="highlighter-rouge">dtoverlay=ramoops</code> in the <code class="highlighter-rouge">config.txt</code> file and reboot the Pi.</p>
+
+<h3 id="create-a-panic">Create a Panic</h3>
+<p>Check if ramoops and pstore was enabled using the dmesg logs</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>$ dmesg
+
+[ ... ]
+[    0.085368] pstore: using zlib compression
+[    0.085382] pstore: Registered ramoops as persistent store backend
+[    0.085389] ramoops: attached 0x100000@0x39900000, ecc: 0/0
+[ ... ]
+</code></pre>
+</div>
+<p>Test the feature by creating a kernel panic</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>$ sudo sh -c "echo 10 &gt; /proc/sys/kernel/panic"
+$ sudo sh -c "echo c &gt; /proc/sysrq-trigger"
+</code></pre>
+</div>
+<p>Now the system will reboot. You will find the logs at <code class="highlighter-rouge">/sys/fs/pstore</code>. It contains details of the register state, stack memory and function backtrace.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ls -l /sys/fs/pstore
+-r--r--r-- 1 root root 21188 Mar  1 16:49 dmesg-ramoops-0
+-r--r--r-- 1 root root 25952 Mar  1 16:49 dmesg-ramoops-1
 </code></pre>
 </div>
 
-<p>The kernel module creates a char device interface to read the user arguments. Usage is as follows</p>
-<div class="highlighter-rouge"><pre class="highlight"><code>$ echo "614 7e9e6c24 " &gt; /dev/test_driver
-
-[  122.536785] test driver device opened
-[  122.537051] test driver device write 
-[  122.537227] user writes : 614 7e9e6c24
-[  122.537227]
-[  122.537364] user 1st write 614
-[  122.537384] user 2nd write 7e9e6c24
-[  122.537462] task_struct pid : 614
-[  122.537532] virt addr :2124311588 7e9e6c24
-[  122.537621] pgd pointer: c8058000 pgd entry:c8059fa0
-[  122.537745] pud pointer: c8059fa0
-[  122.537812] pmd pointer: c8059fa0
-[  122.537880] pte pointer: c8269798
-[  122.537948] page address 574a1000 physical address 574a1c24
-[  122.537974] value at address : 8055
-[  122.538079] test driver device closed / released
-</code></pre>
-</div>
-<p>I have uploaded the driver code <a href="https://github.com/lnxblog/Page-Table-Walk/blob/master/page_table_walk.c">here</a>.</p>
-
-<p>References</p>
+<h4 id="references">References</h4>
 <ol>
-  <li><a href="https://www.kernel.org/doc/gorman/html/understand/understand006.html">Linux Page Table Management</a></li>
-  <li><a href="https://elinux.org/Tims_Notes_on_ARM_memory_allocation">Tim’s Notes on ARM memory allocation</a></li>
+  <li><a href="https://www.kernel.org/doc/html/v4.12/admin-guide/ramoops.html">https://www.kernel.org/doc/html/v4.12/admin-guide/ramoops.html</a></li>
+  <li><a href="https://www.kernel.org/doc/Documentation/ABI/testing/pstore">https://www.kernel.org/doc/Documentation/ABI/testing/pstore</a></li>
+  <li><a href="https://www.raspberrypi.org/forums/viewtopic.php?t=199047">Raspberry Pi forums user : notro</a></li>
 </ol>
-
 
 	<div class="share-page">
     Share this on &rarr;
-    <a href="https://twitter.com/intent/tweet?text=Page tables in Linux&url=https://lnxblog.github.io/2019/12/16/page-table-linux.html&via=impossible14&related=impossible14" rel="nofollow" target="_blank" title="Share on Twitter">Twitter</a>
+    <a href="https://twitter.com/intent/tweet?text=RAMoops panic logger on Raspberry Pi&url=https://lnxblog.github.io/2020/02/25/ramoops-on-rpi.html&via=impossible14&related=impossible14" rel="nofollow" target="_blank" title="Share on Twitter">Twitter</a>
     
-	<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://lnxblog.github.io/2019/12/16/page-table-linux.html&title=Page tables in Linux" rel="nofollow" target="_blank" title="Share on LinkedIn">LinkedIn</a>
+	<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://lnxblog.github.io/2020/02/25/ramoops-on-rpi.html&title=RAMoops panic logger on Raspberry Pi" rel="nofollow" target="_blank" title="Share on LinkedIn">LinkedIn</a>
 </div>
 
 
