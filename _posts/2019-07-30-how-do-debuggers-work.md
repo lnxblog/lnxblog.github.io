@@ -1,0 +1,179 @@
+---
+layout: post
+title: How do debuggers work?
+---
+A debugger is an important tool which helps the developer in understanding and controlling code execution. 
+
+Debugging can be done in user space or kernel space, although the latter is generally more complex to set up. One of the most popular user space debuggers used in Linux is the GNU Debugger or GDB. This powerful tool provides developers with options ranging from setting breakpoints to modifying and watching register and memory addresses. In this article, I will be describing the working of user space debugging and will try to implement a simple debugger.
+
+## The PTRACE system call ##
+The ptrace system call is perhaps the starting point for any debugging application. Every process which is to be debugged begins by invoking this function as:
+```
+ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+```
+This essentially tells the kernel that this process is going to be traced by its parent debugger. Following this function, any system call by the child causes a SIGTRAP signal to delivered which wakes up the parent which is in a wait() system call. The parent can then inspect the child process like its register contents, signal information. The man page elaborately describes the features of the ptrace API.
+
+## The Breakpoint ##
+Though the ptrace is a powerful tool to control a traced process, we still need to be able to set a breakpoint at our desired location to stop the code execution. This process is architecture dependent and I will describe the procedure for the Intel and ARM machine in this article.
+### INT 3 ###
+The INT3 or 0xcc is a one byte instruction used in x86 systems to generate SIGTRAP to the process. This is used by debuggers to replace instructions in the debugee which causes it to be stopped with a SIGTRAP signal. From this point onwards the debugger has control over the debugee and can inspect it.
+### ARM ###
+Similary in ARM v7 the instruction used is BKPT #imm. In both ARM state and Thumb state, imm is ignored by the ARM hardware. However, a debugger can use it to store additional information about the breakpoint. 
+You can find the hex code for this instruction (0xe1200070) in the ARM manual.
+.
+
+```
+One important point to note is that the x86 follows the CISC philosophy while ARM follows the RISC philosophy and thus the instructions in the former are of variable length while in the latter are of fixed length ( 4 bytes ).
+```
+This leads to a major distinction in the way the breakpoints are set. 
+1. In case of the x86 before inserting the INT3 instruction the debugger will have to save the existing byte of code.
+2. In case of ARMv7 the debugger will have to save 4 bytes of existing code.
+
+
+## The breakpoint is hit ##
+So once the breakpoint is set the debugger prompts the resumption of the debugee via another ptrace call.
+```c
+ptrace(PTRACE_CONT,child_pid,NULL,NULL)
+```
+This is used to restart a process stopped by a parent debugger. The child executes the breakpoint instruction and is stopped by a SIGTRAP. In a normal debugger control will be given to the user to check the state of the process,memory contents,shared libraries loaded, etc. Once the user wants to continue the execution of the process the debugger has to:
+1. Write back the overwritten byte(s) of code which is equivalent to removing the breakpoint.
+2. Reset the program counter to the location of the breakpoint. The program counter would be pointing to the next instruction.
+
+Once complete the the debugger resumes execution of the debugee and each breakpoint when hit is handled in the same manner.
+
+## The DWARF ##
+The debugger provides user with option to set breakpoints by using the debug information embedded alongside the code. In Linux when we compile our source code with -g option, debugging information is compiled into the program.
+Thw format for storing the debug info is called DWARF. 
+You can check if your program has been compiled with debug info by checking for section headers using the readelf command
+
+```
+$ readelf -S a.out
+...
+  [28] .debug_aranges    PROGBITS        00000000 08cce8 0005d8 00      0   0  8
+  [29] .debug_info       PROGBITS        00000000 08d2c0 088be2 00      0   0  1
+  [30] .debug_abbrev     PROGBITS        00000000 115ea2 009371 00      0   0  1
+  [31] .debug_line       PROGBITS        00000000 11f213 01e943 00      0   0  1
+  [32] .debug_frame      PROGBITS        00000000 13db58 00b350 00      0   0  4
+  [33] .debug_str        PROGBITS        00000000 148ea8 01bd3b 01  MS  0   0  1
+  [34] .debug_loc        PROGBITS        00000000 164be3 04c77f 00      0   0  1
+  [35] .debug_ranges     PROGBITS        00000000 1b1368 004960 00      0   0  8
+...
+```
+This info is important for the debugger to maintain mapping between the function name and line of code which starts execution of the function. Debuggers like GDB are able to set breakpoints at functions even when compiled without debug info. This might be by making use of the symbol table compiled into all ELF files which holds all names of all functions and variables part of the binary.
+But when compiled with debug info, additional details regarding the file name and line number is displayed when a breakpoint is set.
+
+You can check the debug info section using objdump
+```
+$ objdump --dwarf=info a.out
+[ ... ]
+ <1><9d>: Abbrev Number: 6 (DW_TAG_subprogram)
+    <9e>   DW_AT_external    : 1
+    <9e>   DW_AT_name        : (indirect string, offset: 0x63): func_fork
+    <a2>   DW_AT_decl_file   : 1
+    <a3>   DW_AT_decl_line   : 8
+    <a4>   DW_AT_type        : <0x57>
+    <a8>   DW_AT_low_pc      : 0x400646
+    <b0>   DW_AT_high_pc     : 0x83
+    <b8>   DW_AT_frame_base  : 1 byte block: 9c 	(DW_OP_call_frame_cfa)
+    <ba>   DW_AT_GNU_all_tail_call_sites: 1
+    <ba>   DW_AT_sibling     : <0xd8>
+ <2><be>: Abbrev Number: 7 (DW_TAG_variable)
+    <bf>   DW_AT_name        : (indirect string, offset: 0x25): status
+    <c3>   DW_AT_decl_file   : 1
+    <c4>   DW_AT_decl_line   : 9
+    <c5>   DW_AT_type        : <0x57>
+ <2><c9>: Abbrev Number: 8 (DW_TAG_variable)
+    <ca>   DW_AT_name        : (indirect string, offset: 0xe): child
+    <ce>   DW_AT_decl_file   : 1
+    <cf>   DW_AT_decl_line   : 10
+    <d0>   DW_AT_type        : <0x8b>
+    <d4>   DW_AT_location    : 2 byte block: 91 6c 	(DW_OP_fbreg: -20)
+ <2><d7>: Abbrev Number: 0
+ <1><d8>: Abbrev Number: 9 (DW_TAG_subprogram)
+    <d9>   DW_AT_external    : 1
+    <d9>   DW_AT_name        : (indirect string, offset: 0x7b): main
+    <dd>   DW_AT_decl_file   : 1
+    <de>   DW_AT_decl_line   : 34
+    <df>   DW_AT_prototyped  : 1
+    <df>   DW_AT_type        : <0x57>
+    <e3>   DW_AT_low_pc      : 0x4006c9
+    <eb>   DW_AT_high_pc     : 0x63
+    <f3>   DW_AT_frame_base  : 1 byte block: 9c 	(DW_OP_call_frame_cfa)
+    <f5>   DW_AT_GNU_all_tail_call_sites: 1
+    <f5>   DW_AT_sibling     : <0x132>
+[ ... ]
+```
+Each of these entries are called Debugging Information Entry (DIE). We are primarily interested in `DW_TAG_subprogram` entry as this is the entry which contains the function names where we want to set the breakpoint. Under each there are several attributes and the `DW_AT_low_pc` attribute contains the address at which we can set the breakpoint.
+
+I have tried to write my own simple debugger based on the concepts which I described above. I used a structure to make a list of possible breakpoints.
+```C
+typedef struct breakpoint
+{
+    char name[10];			\\ The name of the function
+    Dwarf_Addr addr;		\\ The address of the function
+	unsigned char save;		\\ Single byte save before replacing with INT3. This is specific to Intel.
+	int count;				\\ The index of the current structure.
+    struct breakpoint *nxt;	\\ pointer to next breakpoint structure
+}bkpt;
+```
+
+Using the DWARF library API we can look at the dwarf info compiled into the binary and create a linked list of function names using the above structure `bkpt`.
+Following this you fork a new process and perform a `TRACEME` before performing an `exec` of the program you are investigating.
+
+In the parent process, I display a list of available functions and accept functions at which breakpoint is to be set from the user.
+
+For setting the breakpoint, I modify the address contents using the proc file `/proc/<pid>/mem` of the child. Reads and writes can be performed using `pread` and `pwrite` system calls. 
+Once breakpoints are set the parent performs `PTRACE_CONT` and waits for the breakpoints to be hit. As each function is hit the contents of the address are restored and the instruction pointer is set back to previous instruction before calling the `PTRACE_CONT` again.
+
+Here's a sample program which I tested. 
+```
+#include <stdio.h>
+void test_func2()
+{
+	return;
+}
+void test_func1()
+{
+	test_func2();
+	return;
+}
+int main()
+{
+	test_func1();
+	return  0;
+}
+```
+The sample debug session which i ran on an x86 platform.
+```
+$ ./my_debugger ./a.out 
+Choose breakpoint locations
+3. main	0x400505
+2. test_func1	0x4004f4
+1. test_func2	0x4004ed
+1
+test_func2 chosen
+Choose breakpoint locations
+3. main	0x400505
+2. test_func1	0x4004f4
+1. test_func2	0x4004ed
+2
+test_func1 chosen
+Choose breakpoint locations
+3. main	0x400505
+2. test_func1	0x4004f4
+1. test_func2	0x4004ed
+q
+signal 5 caused stop
+The child is executing 4004f5
+test_func1 hit
+c
+signal 5 caused stop
+The child is executing 4004ee
+test_func2 hit
+c
+```
+I have uploaded the source code to github [here](https://github.com/lnxblog/linux_debugger/blob/master/debugger.c). Feel free to use it, experiment with it or give me feedback on the code itself.
+
+References
+1. [https://www.gnu.org/software/gdb/documentation/](GDB)
+2. [https://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/](https://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/)

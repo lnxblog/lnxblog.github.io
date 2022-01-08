@@ -1,0 +1,7 @@
+---
+layout: post
+title: "Let's get started"
+---
+This blog is a journal of my learnings while programming in Linux.
+Besides giving me an insight into the working of Operating systems, it may help you in learning something new.
+You may help in improving the learning curve by providing your technical feedback.

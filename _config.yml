@@ -1,0 +1,27 @@
+title: LNXBlog
+description: Offbeat Explorations in Linux
+show_downloads: true
+
+author: Hemanth Nandish
+plugins: 
+- jekyll-paginate
+- octopress-debugger
+gems: [jekyll-paginate]
+paginate: 5
+paginate_path: /page:num/
+#paginate_path: "page:num"
+
+#baseurl: "/cayman-blog" # change this to the subpath of your site, e.g. /blog. Leave it empty if you don't need it.
+url: "https://lnxblog.github.io" # change this to the base hostname & protocol for your site
+twitter_username: impossible14
+google_analytics:
+# cayman-blog date format
+# refer to http://shopify.github.io/liquid/filters/date/ if you want to customize this
+cayman-blog:
+  date_format: "%b %-d, %Y"
+  
+#twitter:
+  #username: impossible14 
+github:
+    owner_url: https://github.com/lnxblog
+    owner_name: hemanth nandish
