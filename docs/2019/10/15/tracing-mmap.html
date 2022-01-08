@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Non social metatags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#157878">
+
+    
+
+    <title>Tracing mmap in Linux</title>
+
+    
+      <!-- Update your html tag to include the itemscope and itemtype attributes. -->
+<html itemscope itemtype="http://schema.org/Article">
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Place this data between the <head> tags of your website -->
+
+  <meta name="author" content="Hemanth Nandish">
+
+<meta name="description" content="Memory Map or mmap ia a feature in Linux that allows a process to map a device or file into its virtual address space. It is invoked via the mmap() s..." />
+
+
+
+
+
+<!-- Schema.org markup for Google+ -->
+<meta itemprop="name" content="Tracing mmap in Linux">
+<meta itemprop="description" content="Memory Map or mmap ia a feature in Linux that allows a process to map a device or file into its virtual address space. It is invoked via the mmap() s...">
+
+  <meta itemprop="image" content="https://lnxblog.github.io">
+
+
+<!-- Twitter Card data -->
+<meta name="twitter:card" content="summary_large_image">
+
+
+
+<meta name="twitter:title" content="Tracing mmap in Linux">
+<meta name="twitter:description" content="Memory Map or mmap ia a feature in Linux that allows a process to map a device or file into its virtual address space. It is invoked via the mmap() s...">
+
+
+
+<!-- Twitter summary card with large image must be at least 280x150px -->
+
+  <meta name="twitter:image:src" content="https://lnxblog.github.io">
+  <meta property="twitter:image" content="https://lnxblog.github.io">
+
+<meta property="twitter:url" content="https://lnxblog.github.io/2019/10/15/tracing-mmap.html">
+
+<!-- Open Graph data -->
+<meta property="og:title" content="Tracing mmap in Linux" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lnxblog.github.io/2019/10/15/tracing-mmap.html" />
+
+  <meta property="og:image" content="https://lnxblog.github.io" />
+
+<meta property="og:description" content="Memory Map or mmap ia a feature in Linux that allows a process to map a device or file into its virtual address space. It is invoked via the mmap() s..." />
+<meta property="og:site_name" content="LNXBlog" />
+
+  <meta property="article:published_time" content="2019-10-15T00:00:00+05:30" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+    
+
+    <link rel="canonical" href="/2019/10/15/tracing-mmap.html">
+
+    
+
+    <link rel="shortcut icon" href="https://lnxblog.github.io/favicon.ico">
+    <meta name="robots" content="noarchive">
+
+    <!-- <link rel="alternate" media="only screen and (max-width: 640px)" href="">
+    <link rel="alternate" media="handheld" href=""> -->
+
+
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+  </head>
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+
+    
+      <a class="site-title" href="/">LNXBlog</a>
+    
+
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+		  
+            
+		
+            
+              
+              
+            
+          
+		  
+            
+		
+            
+              
+                <a class="page-link" href="/about.html">About</a>
+              
+            
+          
+		  
+            
+		
+            
+              
+                <a class="page-link" href="/contact.html">Contact</a>
+              
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+        </div>
+
+      </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    
+
+    <section class="page-header">
+      <h1 class="project-name">Tracing mmap in Linux</h1>
+      <h2 class="project-tagline"></h2>
+      
+      <!-- Post tagline -->
+      
+        <h2 class="project-date">
+        <time datetime="2019-10-15T00:00:00+05:30" itemprop="datePublished">
+          
+          Oct 15, 2019
+        </time>
+        
+        
+          • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span itemprop="name">Hemanth Nandish</span></span>
+        
+		•
+		
+		
+		 <span itemprop="timeRequired"> 
+		 
+		 3 mins read 
+		 
+		 </span> 
+        </h2>
+      
+      <!-- End: Post tagline -->
+    </section>
+
+    <section class="main-content">
+
+      <article itemscope itemtype="http://schema.org/BlogPosting">
+
+  <!-- <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Tracing mmap in Linux</h1>
+    <p class="post-meta">
+      <time datetime="2019-10-15T00:00:00+05:30" itemprop="datePublished">
+        
+        Oct 15, 2019
+      </time>
+      </p>
+  </header> -->
+
+  <div itemprop="articleBody">
+    <p>Memory Map or mmap ia a feature in Linux that allows a process to map a device or file into its virtual address space. It is invoked via the mmap() system call. Linux adds a new virtual memory area or vm_area_struct to the address space of the process. This can be checked in the proc/<pid>/maps entry of the process.</pid></p>
+
+<p>From the man page:</p>
+
+<pre><code class="language-C">void *mmap(void *addr, size_t length, int prot, int flags,
+                  int fd, off_t offset);
+</code></pre>
+
+<p>mmap() returns a pointer to the beginning of the virtual address of the mapped area.
+In case the mapping fails, MAP_FAILED is returned.</p>
+
+<hr />
+
+<p>Internally Linux calls <code class="highlighter-rouge">sys_mmap2</code> routine. Below is the code for an ARM 32-bit machine. This is arch specific code. The subsequent functions are generic.</p>
+
+<h3 id="archarmkernelentry-commons">arch/arm/kernel/entry-common.S</h3>
+<div class="highlighter-rouge"><pre class="highlight"><code>sys_mmap2:
+#if PAGE_SHIFT &gt; 12
+		tst	r5, #PGOFF_MASK
+		moveq	r5, r5, lsr #PAGE_SHIFT - 12
+		streq	r5, [sp, #4]
+		beq	sys_mmap_pgoff
+		mov	r0, #-EINVAL
+		mov	pc, lr
+#else
+		str	r5, [sp, #4]
+		b	sys_mmap_pgoff
+#endif
+ENDPROC(sys_mmap2)
+</code></pre>
+</div>
+<p>The next routine is sys_mmap_pgoff which internally invokes <code class="highlighter-rouge">ksys_mmap_pgoff</code> in <code class="highlighter-rouge">mm/mmap.c</code>. <code class="highlighter-rouge">ksys_mmap_pgoff</code> performs some checks before finally calling <code class="highlighter-rouge">vm_mmap_pgoff</code> located in <code class="highlighter-rouge">mm/util.c</code></p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>unsigned long ksys_mmap_pgoff(unsigned long addr, unsigned long len,
+			      unsigned long prot, unsigned long flags,
+			      unsigned long fd, unsigned long pgoff)
+{
+	[...]
+
+	retval = vm_mmap_pgoff(file, addr, len, prot, flags, pgoff);
+	return retval;
+}
+
+SYSCALL_DEFINE6(mmap_pgoff, unsigned long, addr, unsigned long, len,
+		unsigned long, prot, unsigned long, flags,
+		unsigned long, fd, unsigned long, pgoff)
+{
+	return ksys_mmap_pgoff(addr, len, prot, flags, fd, pgoff);
+}
+</code></pre>
+</div>
+<p>Inside <code class="highlighter-rouge">vm_mmap_pgoff</code> mm-&gt;mmap_sem is acquired before calling <code class="highlighter-rouge">do_mmap_pgoff</code>  function in again in <code class="highlighter-rouge">mm/mmap.c</code>.</p>
+
+<p><code class="highlighter-rouge">do_mmap_pgoff</code> performs checks on the flags parameter and will call the device or file specific <code class="highlighter-rouge">get_unmapped_area</code> to allocate memory for the mapping.</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">do_mmap_pgoff</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">,</span>
+			<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">len</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">prot</span><span class="p">,</span>
+			<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">pgoff</span><span class="p">,</span>
+			<span class="kt">unsigned</span> <span class="kt">long</span> <span class="o">*</span><span class="n">populate</span><span class="p">)</span>
+<span class="p">{</span>
+	
+	<span class="p">[...]</span>
+	
+	<span class="n">addr</span> <span class="o">=</span> <span class="n">get_unmapped_area</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">pgoff</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+
+	<span class="p">[...]</span>
+
+	<span class="n">addr</span> <span class="o">=</span> <span class="n">mmap_region</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">vm_flags</span><span class="p">,</span> <span class="n">pgoff</span><span class="p">);</span> <span class="c1">// addr used by vm_area_struct
+</span>
+	<span class="p">[...]</span>
+	<span class="k">return</span> <span class="n">addr</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Next <code class="highlighter-rouge">mmap_region()</code> function is invoked which allocates a <code class="highlighter-rouge">vm_area_struct</code> from the slab allocator. 
+Finally the device specific or filesystem <code class="highlighter-rouge">mmap()</code> function is invoked.</p>
+
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">mmap_region</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">,</span>
+		<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">len</span><span class="p">,</span> <span class="n">vm_flags_t</span> <span class="n">vm_flags</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">pgoff</span><span class="p">)</span>
+<span class="p">{</span>
+
+	<span class="n">vma</span> <span class="o">=</span> <span class="n">kmem_cache_zalloc</span><span class="p">(</span><span class="n">vm_area_cachep</span><span class="p">,</span> <span class="n">GFP_KERNEL</span><span class="p">);</span>
+	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">vma</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">error</span> <span class="o">=</span> <span class="o">-</span><span class="n">ENOMEM</span><span class="p">;</span>
+		<span class="k">goto</span> <span class="n">unacct_error</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_mm</span> <span class="o">=</span> <span class="n">mm</span><span class="p">;</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_start</span> <span class="o">=</span> <span class="n">addr</span><span class="p">;</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_end</span> <span class="o">=</span> <span class="n">addr</span> <span class="o">+</span> <span class="n">len</span><span class="p">;</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_flags</span> <span class="o">=</span> <span class="n">vm_flags</span><span class="p">;</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_page_prot</span> <span class="o">=</span> <span class="n">vm_get_page_prot</span><span class="p">(</span><span class="n">vm_flags</span><span class="p">);</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_pgoff</span> <span class="o">=</span> <span class="n">pgoff</span><span class="p">;</span>
+
+	<span class="p">[...]</span>
+	
+	<span class="n">error</span> <span class="o">=</span> <span class="n">file</span><span class="o">-&gt;</span><span class="n">f_op</span><span class="o">-&gt;</span><span class="n">mmap</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">vma</span><span class="p">);</span>
+	
+	<span class="p">[...]</span>
+	
+</code></pre>
+</div>
+
+<p>So where does the mmap routine ulimately begin.</p>
+<h3 id="if-a-device-wants-to-allow-user-to-memory-map-the-device-memory-area-then-it-must-have-a-mmap-routine-written-as-part-of-the-driver-code">If a device wants to allow user to memory map the device memory area then it must have a mmap routine written as part of the driver code.</h3>
+<p>This doesn’t apply when mapping files because Linux provides a built-in mmap routine for that.</p>
+
+<p>So now I will describe a simple mmap routine in a device driver.</p>
+
+<p>The intented use of mmap in a device driver is to provide  user space access to a memory area allocated inside a driver routine.
+So I have allocated some memory using the <code class="highlighter-rouge">kalloc()</code> function in the <code class="highlighter-rouge">initfunction</code> of the driver and copied ‘hello world’ string into the area.</p>
+
+<pre><code class="language-C">
+    ptr = kmalloc(4096,GFP_KERNEL);
+	if (!ptr)
+	{
+		printk(KERN_EMERG "memory allocation failed");
+		return -ENOMEM;
+	}
+    strcpy(ptr,"hello world\n");
+</code></pre>
+
+<p>Next inside the mmap routine, the <code class="highlighter-rouge">remap_pfn_page</code> maps a contiguous physical address space represented by the <code class="highlighter-rouge">ptr</code> which we allocated in the <code class="highlighter-rouge">initfunction</code> into the virtual space represented by vm_area_struct.</p>
+
+<pre><code class="language-C">static ssize_t dummy_fop_mmap(struct file *filp, struct vm_area_struct *vma)
+{
+	long addr=ptr;
+	if (remap_pfn_range(vma, vma-&gt;vm_start,virt_to_phys(addr)&gt;&gt;PAGE_SHIFT,4096,vma-&gt;vm_page_prot))
+	{
+		printk("hemanth device mmap error");
+		return -EAGAIN;
+	}
+    return 0;
+
+}
+</code></pre>
+<p>Next populate file operations structure with a pointer to the mmap routine.</p>
+
+<pre><code class="language-C">static const struct file_operations hemanth_fops = {
+	.owner = THIS_MODULE,
+	.open = dummy_fop_open,
+	.release = dummy_fop_release,
+	.read = dummy_fop_read,
+	.write = dummy_fop_write,
+	.mmap = dummy_fop_mmap
+};
+</code></pre>
+
+<p>So now when we do mmap on the file descriptor for the driver from user-space, we can read get content stored in the area, which in this case is ‘hello world’.</p>
+
+<p>I have uploaded the driver code and user space mmap code <a href="https://github.com/lnxblog/mmap_demo">here</a>.</p>
+
+<p>Feel free to comment.</p>
+
+<p>References</p>
+<ol>
+  <li><a href="https://lwn.net/Kernel/LDD3/">Linux device drivers</a></li>
+  <li><a href="https://linux-kernel-labs.github.io/master/labs/memory_mapping.html">https://linux-kernel-labs.github.io/master/labs/memory_mapping.html</a></li>
+</ol>
+
+
+	<div class="share-page">
+    Share this on &rarr;
+    <a href="https://twitter.com/intent/tweet?text=Tracing mmap in Linux&url=https://lnxblog.github.io/2019/10/15/tracing-mmap.html&via=impossible14&related=impossible14" rel="nofollow" target="_blank" title="Share on Twitter">Twitter</a>
+    
+	<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://lnxblog.github.io/2019/10/15/tracing-mmap.html&title=Tracing mmap in Linux" rel="nofollow" target="_blank" title="Share on LinkedIn">LinkedIn</a>
+</div>
+
+
+  </div>
+
+  
+  <div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://lnxblog.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</article>
+
+
+      <footer class="site-footer">
+	  
+        <!-- SVG icons from https://iconmonstr.com -->
+		
+        <!-- Github icon 
+        <span class="my-span-icon">
+          <a href="https://github.com/lnxblog" aria-label="hemanth nandish's GitHub" title="hemanth nandish's GitHub">
+            <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.9310-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+        </span>
+		
+    
+        <span class="my-span-icon">
+          <a href="https://twitter.com/" aria-label="hemanth nandish's Twitter" title="hemanth nandish's Twitter">
+            <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.066 9.645c.183 4.04-2.83 8.544-8.164 8.544-1.622 0-3.131-.476-4.402-1.291 1.524.18 3.045-.244 4.252-1.189-1.256-.023-2.317-.854-2.684-1.995.451.086.895.061 1.298-.049-1.381-.278-2.335-1.522-2.304-2.853.388.215.83.344 1.301.359-1.279-.855-1.641-2.544-.889-3.835 1.416 1.738 3.533 2.881 5.92 3.001-.419-1.796.944-3.527 2.799-3.527.825 0 1.572.349 2.096.907.654-.128 1.27-.368 1.824-.697-.215.671-.67 1.233-1.263 1.589.581-.07 1.135-.224 1.649-.453-.384.578-.87 1.084-1.433 1.489z"/></svg>
+          </a>
+        </span>
+
+   
+        
+ 
+        
+        
+          <span class="my-span-icon">
+            <a href="/about.html" aria-label="Contact" title="Contact hemanth nandish">
+              <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .02c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.99 6.98l-6.99 5.666-6.991-5.666h13.981zm.01 10h-14v-8.505l7 5.673 7-5.672v8.504z"/></svg>
+            </a>
+          </span>
+        
+		-->
+      </footer>
+    </section>
+
+    
+	<script type="text/javascript">
+	(function() {
+  var pre = document.getElementsByTagName('pre'),
+    pl = pre.length;
+  for (var i = 0; i < pl; i++) {
+    pre[i].innerHTML = '<span class="line-number"></span>' + pre[i].innerHTML + '<span class="cl"></span>';
+    var num = pre[i].innerHTML.split(/\n/).length;
+    for (var j = 0; j < (num - 1); j++) {
+      var line_num = pre[i].getElementsByTagName('span')[0];
+      line_num.innerHTML += '<span>' + (j + 1) + '</span>';
+    }
+  }
+})();
+	</script>
+  </body>
+</html>

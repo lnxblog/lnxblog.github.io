@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <!-- Non social metatags -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#157878">
+
+    
+
+    <title>How do debuggers work?</title>
+
+    
+      <!-- Update your html tag to include the itemscope and itemtype attributes. -->
+<html itemscope itemtype="http://schema.org/Article">
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Place this data between the <head> tags of your website -->
+
+  <meta name="author" content="Hemanth Nandish">
+
+<meta name="description" content="A debugger is an important tool which helps the developer in understanding and controlling code execution.
+
+" />
+
+
+
+
+
+<!-- Schema.org markup for Google+ -->
+<meta itemprop="name" content="How do debuggers work?">
+<meta itemprop="description" content="A debugger is an important tool which helps the developer in understanding and controlling code execution.
+
+">
+
+  <meta itemprop="image" content="https://lnxblog.github.io">
+
+
+<!-- Twitter Card data -->
+<meta name="twitter:card" content="summary_large_image">
+
+
+
+<meta name="twitter:title" content="How do debuggers work?">
+<meta name="twitter:description" content="A debugger is an important tool which helps the developer in understanding and controlling code execution.
+
+">
+
+
+
+<!-- Twitter summary card with large image must be at least 280x150px -->
+
+  <meta name="twitter:image:src" content="https://lnxblog.github.io">
+  <meta property="twitter:image" content="https://lnxblog.github.io">
+
+<meta property="twitter:url" content="https://lnxblog.github.io/2019/07/30/how-do-debuggers-work.html">
+
+<!-- Open Graph data -->
+<meta property="og:title" content="How do debuggers work?" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lnxblog.github.io/2019/07/30/how-do-debuggers-work.html" />
+
+  <meta property="og:image" content="https://lnxblog.github.io" />
+
+<meta property="og:description" content="A debugger is an important tool which helps the developer in understanding and controlling code execution.
+
+" />
+<meta property="og:site_name" content="LNXBlog" />
+
+  <meta property="article:published_time" content="2019-07-30T00:00:00+05:30" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+    
+
+    <link rel="canonical" href="/2019/07/30/how-do-debuggers-work.html">
+
+    
+
+    <link rel="shortcut icon" href="https://lnxblog.github.io/favicon.ico">
+    <meta name="robots" content="noarchive">
+
+    <!-- <link rel="alternate" media="only screen and (max-width: 640px)" href="">
+    <link rel="alternate" media="handheld" href=""> -->
+
+
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+  </head>
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+    
+    
+
+    
+      <a class="site-title" href="/">LNXBlog</a>
+    
+
+    
+      <nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger">
+          
+		  
+            
+		
+            
+              
+              
+            
+          
+		  
+            
+		
+            
+              
+                <a class="page-link" href="/about.html">About</a>
+              
+            
+          
+		  
+            
+		
+            
+              
+                <a class="page-link" href="/contact.html">Contact</a>
+              
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+		  
+            
+		
+            
+          
+        </div>
+
+      </nav>
+    
+  </div>
+</header>
+
+
+    
+    
+    
+
+    <section class="page-header">
+      <h1 class="project-name">How do debuggers work?</h1>
+      <h2 class="project-tagline"></h2>
+      
+      <!-- Post tagline -->
+      
+        <h2 class="project-date">
+        <time datetime="2019-07-30T00:00:00+05:30" itemprop="datePublished">
+          
+          Jul 30, 2019
+        </time>
+        
+        
+          • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span itemprop="name">Hemanth Nandish</span></span>
+        
+		•
+		
+		
+		 <span itemprop="timeRequired"> 
+		 
+		 6 mins read 
+		 
+		 </span> 
+        </h2>
+      
+      <!-- End: Post tagline -->
+    </section>
+
+    <section class="main-content">
+
+      <article itemscope itemtype="http://schema.org/BlogPosting">
+
+  <!-- <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">How do debuggers work?</h1>
+    <p class="post-meta">
+      <time datetime="2019-07-30T00:00:00+05:30" itemprop="datePublished">
+        
+        Jul 30, 2019
+      </time>
+      </p>
+  </header> -->
+
+  <div itemprop="articleBody">
+    <p>A debugger is an important tool which helps the developer in understanding and controlling code execution.</p>
+
+<p>Debugging can be done in user space or kernel space, although the latter is generally more complex to set up. One of the most popular user space debuggers used in Linux is the GNU Debugger or GDB. This powerful tool provides developers with options ranging from setting breakpoints to modifying and watching register and memory addresses. In this article, I will be describing the working of user space debugging and will try to implement a simple debugger.</p>
+
+<h2 id="the-ptrace-system-call">The PTRACE system call</h2>
+<p>The ptrace system call is perhaps the starting point for any debugging application. Every process which is to be debugged begins by invoking this function as:</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+</code></pre>
+</div>
+<p>This essentially tells the kernel that this process is going to be traced by its parent debugger. Following this function, any system call by the child causes a SIGTRAP signal to delivered which wakes up the parent which is in a wait() system call. The parent can then inspect the child process like its register contents, signal information. The man page elaborately describes the features of the ptrace API.</p>
+
+<h2 id="the-breakpoint">The Breakpoint</h2>
+<p>Though the ptrace is a powerful tool to control a traced process, we still need to be able to set a breakpoint at our desired location to stop the code execution. This process is architecture dependent and I will describe the procedure for the Intel and ARM machine in this article.</p>
+<h3 id="int-3">INT 3</h3>
+<p>The INT3 or 0xcc is a one byte instruction used in x86 systems to generate SIGTRAP to the process. This is used by debuggers to replace instructions in the debugee which causes it to be stopped with a SIGTRAP signal. From this point onwards the debugger has control over the debugee and can inspect it.</p>
+<h3 id="arm">ARM</h3>
+<p>Similary in ARM v7 the instruction used is BKPT #imm. In both ARM state and Thumb state, imm is ignored by the ARM hardware. However, a debugger can use it to store additional information about the breakpoint. 
+You can find the hex code for this instruction (0xe1200070) in the ARM manual.
+.</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>One important point to note is that the x86 follows the CISC philosophy while ARM follows the RISC philosophy and thus the instructions in the former are of variable length while in the latter are of fixed length ( 4 bytes ).
+</code></pre>
+</div>
+<p>This leads to a major distinction in the way the breakpoints are set.</p>
+<ol>
+  <li>In case of the x86 before inserting the INT3 instruction the debugger will have to save the existing byte of code.</li>
+  <li>In case of ARMv7 the debugger will have to save 4 bytes of existing code.</li>
+</ol>
+
+<h2 id="the-breakpoint-is-hit">The breakpoint is hit</h2>
+<p>So once the breakpoint is set the debugger prompts the resumption of the debugee via another ptrace call.</p>
+<div class="language-c highlighter-rouge"><pre class="highlight"><code><span class="n">ptrace</span><span class="p">(</span><span class="n">PTRACE_CONT</span><span class="p">,</span><span class="n">child_pid</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="nb">NULL</span><span class="p">)</span>
+</code></pre>
+</div>
+<p>This is used to restart a process stopped by a parent debugger. The child executes the breakpoint instruction and is stopped by a SIGTRAP. In a normal debugger control will be given to the user to check the state of the process,memory contents,shared libraries loaded, etc. Once the user wants to continue the execution of the process the debugger has to:</p>
+<ol>
+  <li>Write back the overwritten byte(s) of code which is equivalent to removing the breakpoint.</li>
+  <li>Reset the program counter to the location of the breakpoint. The program counter would be pointing to the next instruction.</li>
+</ol>
+
+<p>Once complete the the debugger resumes execution of the debugee and each breakpoint when hit is handled in the same manner.</p>
+
+<h2 id="the-dwarf">The DWARF</h2>
+<p>The debugger provides user with option to set breakpoints by using the debug information embedded alongside the code. In Linux when we compile our source code with -g option, debugging information is compiled into the program.
+Thw format for storing the debug info is called DWARF. 
+You can check if your program has been compiled with debug info by checking for section headers using the readelf command</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ readelf -S a.out
+...
+  [28] .debug_aranges    PROGBITS        00000000 08cce8 0005d8 00      0   0  8
+  [29] .debug_info       PROGBITS        00000000 08d2c0 088be2 00      0   0  1
+  [30] .debug_abbrev     PROGBITS        00000000 115ea2 009371 00      0   0  1
+  [31] .debug_line       PROGBITS        00000000 11f213 01e943 00      0   0  1
+  [32] .debug_frame      PROGBITS        00000000 13db58 00b350 00      0   0  4
+  [33] .debug_str        PROGBITS        00000000 148ea8 01bd3b 01  MS  0   0  1
+  [34] .debug_loc        PROGBITS        00000000 164be3 04c77f 00      0   0  1
+  [35] .debug_ranges     PROGBITS        00000000 1b1368 004960 00      0   0  8
+...
+</code></pre>
+</div>
+<p>This info is important for the debugger to maintain mapping between the function name and line of code which starts execution of the function. Debuggers like GDB are able to set breakpoints at functions even when compiled without debug info. This might be by making use of the symbol table compiled into all ELF files which holds all names of all functions and variables part of the binary.
+But when compiled with debug info, additional details regarding the file name and line number is displayed when a breakpoint is set.</p>
+
+<p>You can check the debug info section using objdump</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>$ objdump --dwarf=info a.out
+[ ... ]
+ &lt;1&gt;&lt;9d&gt;: Abbrev Number: 6 (DW_TAG_subprogram)
+    &lt;9e&gt;   DW_AT_external    : 1
+    &lt;9e&gt;   DW_AT_name        : (indirect string, offset: 0x63): func_fork
+    &lt;a2&gt;   DW_AT_decl_file   : 1
+    &lt;a3&gt;   DW_AT_decl_line   : 8
+    &lt;a4&gt;   DW_AT_type        : &lt;0x57&gt;
+    &lt;a8&gt;   DW_AT_low_pc      : 0x400646
+    &lt;b0&gt;   DW_AT_high_pc     : 0x83
+    &lt;b8&gt;   DW_AT_frame_base  : 1 byte block: 9c 	(DW_OP_call_frame_cfa)
+    &lt;ba&gt;   DW_AT_GNU_all_tail_call_sites: 1
+    &lt;ba&gt;   DW_AT_sibling     : &lt;0xd8&gt;
+ &lt;2&gt;&lt;be&gt;: Abbrev Number: 7 (DW_TAG_variable)
+    &lt;bf&gt;   DW_AT_name        : (indirect string, offset: 0x25): status
+    &lt;c3&gt;   DW_AT_decl_file   : 1
+    &lt;c4&gt;   DW_AT_decl_line   : 9
+    &lt;c5&gt;   DW_AT_type        : &lt;0x57&gt;
+ &lt;2&gt;&lt;c9&gt;: Abbrev Number: 8 (DW_TAG_variable)
+    &lt;ca&gt;   DW_AT_name        : (indirect string, offset: 0xe): child
+    &lt;ce&gt;   DW_AT_decl_file   : 1
+    &lt;cf&gt;   DW_AT_decl_line   : 10
+    &lt;d0&gt;   DW_AT_type        : &lt;0x8b&gt;
+    &lt;d4&gt;   DW_AT_location    : 2 byte block: 91 6c 	(DW_OP_fbreg: -20)
+ &lt;2&gt;&lt;d7&gt;: Abbrev Number: 0
+ &lt;1&gt;&lt;d8&gt;: Abbrev Number: 9 (DW_TAG_subprogram)
+    &lt;d9&gt;   DW_AT_external    : 1
+    &lt;d9&gt;   DW_AT_name        : (indirect string, offset: 0x7b): main
+    &lt;dd&gt;   DW_AT_decl_file   : 1
+    &lt;de&gt;   DW_AT_decl_line   : 34
+    &lt;df&gt;   DW_AT_prototyped  : 1
+    &lt;df&gt;   DW_AT_type        : &lt;0x57&gt;
+    &lt;e3&gt;   DW_AT_low_pc      : 0x4006c9
+    &lt;eb&gt;   DW_AT_high_pc     : 0x63
+    &lt;f3&gt;   DW_AT_frame_base  : 1 byte block: 9c 	(DW_OP_call_frame_cfa)
+    &lt;f5&gt;   DW_AT_GNU_all_tail_call_sites: 1
+    &lt;f5&gt;   DW_AT_sibling     : &lt;0x132&gt;
+[ ... ]
+</code></pre>
+</div>
+<p>Each of these entries are called Debugging Information Entry (DIE). We are primarily interested in <code class="highlighter-rouge">DW_TAG_subprogram</code> entry as this is the entry which contains the function names where we want to set the breakpoint. Under each there are several attributes and the <code class="highlighter-rouge">DW_AT_low_pc</code> attribute contains the address at which we can set the breakpoint.</p>
+
+<p>I have tried to write my own simple debugger based on the concepts which I described above. I used a structure to make a list of possible breakpoints.</p>
+<pre><code class="language-C">typedef struct breakpoint
+{
+    char name[10];			\\ The name of the function
+    Dwarf_Addr addr;		\\ The address of the function
+	unsigned char save;		\\ Single byte save before replacing with INT3. This is specific to Intel.
+	int count;				\\ The index of the current structure.
+    struct breakpoint *nxt;	\\ pointer to next breakpoint structure
+}bkpt;
+</code></pre>
+
+<p>Using the DWARF library API we can look at the dwarf info compiled into the binary and create a linked list of function names using the above structure <code class="highlighter-rouge">bkpt</code>.
+Following this you fork a new process and perform a <code class="highlighter-rouge">TRACEME</code> before performing an <code class="highlighter-rouge">exec</code> of the program you are investigating.</p>
+
+<p>In the parent process, I display a list of available functions and accept functions at which breakpoint is to be set from the user.</p>
+
+<p>For setting the breakpoint, I modify the address contents using the proc file <code class="highlighter-rouge">/proc/&lt;pid&gt;/mem</code> of the child. Reads and writes can be performed using <code class="highlighter-rouge">pread</code> and <code class="highlighter-rouge">pwrite</code> system calls. 
+Once breakpoints are set the parent performs <code class="highlighter-rouge">PTRACE_CONT</code> and waits for the breakpoints to be hit. As each function is hit the contents of the address are restored and the instruction pointer is set back to previous instruction before calling the <code class="highlighter-rouge">PTRACE_CONT</code> again.</p>
+
+<p>Here’s a sample program which I tested.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>#include &lt;stdio.h&gt;
+void test_func2()
+{
+	return;
+}
+void test_func1()
+{
+	test_func2();
+	return;
+}
+int main()
+{
+	test_func1();
+	return  0;
+}
+</code></pre>
+</div>
+<p>The sample debug session which i ran on an x86 platform.</p>
+<div class="highlighter-rouge"><pre class="highlight"><code>$ ./my_debugger ./a.out 
+Choose breakpoint locations
+3. main	0x400505
+2. test_func1	0x4004f4
+1. test_func2	0x4004ed
+1
+test_func2 chosen
+Choose breakpoint locations
+3. main	0x400505
+2. test_func1	0x4004f4
+1. test_func2	0x4004ed
+2
+test_func1 chosen
+Choose breakpoint locations
+3. main	0x400505
+2. test_func1	0x4004f4
+1. test_func2	0x4004ed
+q
+signal 5 caused stop
+The child is executing 4004f5
+test_func1 hit
+c
+signal 5 caused stop
+The child is executing 4004ee
+test_func2 hit
+c
+</code></pre>
+</div>
+<p>I have uploaded the source code to github <a href="https://github.com/lnxblog/linux_debugger/blob/master/debugger.c">here</a>. Feel free to use it, experiment with it or give me feedback on the code itself.</p>
+
+<p>References</p>
+<ol>
+  <li><a href="GDB">https://www.gnu.org/software/gdb/documentation/</a></li>
+  <li><a href="https://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/">https://eli.thegreenplace.net/2011/01/23/how-debuggers-work-part-1/</a></li>
+</ol>
+
+	<div class="share-page">
+    Share this on &rarr;
+    <a href="https://twitter.com/intent/tweet?text=How do debuggers work?&url=https://lnxblog.github.io/2019/07/30/how-do-debuggers-work.html&via=impossible14&related=impossible14" rel="nofollow" target="_blank" title="Share on Twitter">Twitter</a>
+    
+	<a href="https://www.linkedin.com/shareArticle?mini=true&url=https://lnxblog.github.io/2019/07/30/how-do-debuggers-work.html&title=How do debuggers work?" rel="nofollow" target="_blank" title="Share on LinkedIn">LinkedIn</a>
+</div>
+
+
+  </div>
+
+  
+  <div id="disqus_thread"></div>
+<script>
+
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://lnxblog.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</article>
+
+
+      <footer class="site-footer">
+	  
+        <!-- SVG icons from https://iconmonstr.com -->
+		
+        <!-- Github icon 
+        <span class="my-span-icon">
+          <a href="https://github.com/lnxblog" aria-label="hemanth nandish's GitHub" title="hemanth nandish's GitHub">
+            <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.9310-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+        </span>
+		
+    
+        <span class="my-span-icon">
+          <a href="https://twitter.com/" aria-label="hemanth nandish's Twitter" title="hemanth nandish's Twitter">
+            <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.066 9.645c.183 4.04-2.83 8.544-8.164 8.544-1.622 0-3.131-.476-4.402-1.291 1.524.18 3.045-.244 4.252-1.189-1.256-.023-2.317-.854-2.684-1.995.451.086.895.061 1.298-.049-1.381-.278-2.335-1.522-2.304-2.853.388.215.83.344 1.301.359-1.279-.855-1.641-2.544-.889-3.835 1.416 1.738 3.533 2.881 5.92 3.001-.419-1.796.944-3.527 2.799-3.527.825 0 1.572.349 2.096.907.654-.128 1.27-.368 1.824-.697-.215.671-.67 1.233-1.263 1.589.581-.07 1.135-.224 1.649-.453-.384.578-.87 1.084-1.433 1.489z"/></svg>
+          </a>
+        </span>
+
+   
+        
+ 
+        
+        
+          <span class="my-span-icon">
+            <a href="/about.html" aria-label="Contact" title="Contact hemanth nandish">
+              <svg class="my-svg-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 .02c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm6.99 6.98l-6.99 5.666-6.991-5.666h13.981zm.01 10h-14v-8.505l7 5.673 7-5.672v8.504z"/></svg>
+            </a>
+          </span>
+        
+		-->
+      </footer>
+    </section>
+
+    
+	<script type="text/javascript">
+	(function() {
+  var pre = document.getElementsByTagName('pre'),
+    pl = pre.length;
+  for (var i = 0; i < pl; i++) {
+    pre[i].innerHTML = '<span class="line-number"></span>' + pre[i].innerHTML + '<span class="cl"></span>';
+    var num = pre[i].innerHTML.split(/\n/).length;
+    for (var j = 0; j < (num - 1); j++) {
+      var line_num = pre[i].getElementsByTagName('span')[0];
+      line_num.innerHTML += '<span>' + (j + 1) + '</span>';
+    }
+  }
+})();
+	</script>
+  </body>
+</html>
