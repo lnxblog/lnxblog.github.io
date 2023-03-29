@@ -1,0 +1,2 @@
+I"|<p>Berkley Packet Filter (BPF) is a kernel feature in Linux used for event tracing and manipulating network packets. eBPF is the extended version of Berkley Packet Filter (BPF). It is a feature that was initial introduced for network packet filtering but now has additional functions added to it. eBPF is known as just BPF and the former BPF is known as Classical BPF (cBPF).</p>
+:ET

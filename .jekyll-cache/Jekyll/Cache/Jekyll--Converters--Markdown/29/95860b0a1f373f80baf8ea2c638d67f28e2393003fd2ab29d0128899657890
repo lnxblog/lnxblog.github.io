@@ -1,0 +1,4 @@
+I"�<p>For many of us working in the embedded world with ARM devices, it is not uncommon to have come across the company’s marketing terms on security - “TrustZone”, “Trusted Execution Environment”, “Trusted World”.
+I wanted to understand this technology and more importantly OP-TEE, an OS running in the trusted zone specifically designed to provide secure services.
+But before that, we need to understand the ARM trusted firmware (ATF). Here I will describe the ATF for the ARM v8-A profile.</p>
+:ET

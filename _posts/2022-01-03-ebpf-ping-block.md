@@ -142,3 +142,4 @@ References
 3. [https://github.com/lizrice/ebpf-beginners](https://github.com/lizrice/ebpf-beginners)
 4. [https://www.youtube.com/watch?v=0p987hCplbk](https://www.youtube.com/watch?v=0p987hCplbk)
 5. [https://github.com/iovisor/bcc/blob/master/docs/reference_guide.md](https://github.com/iovisor/bcc/blob/master/docs/reference_guide.md)
+6. [https://www.tigera.io/learn/guides/ebpf/ebpf-xdp/](https://www.tigera.io/learn/guides/ebpf/ebpf-xdp/)

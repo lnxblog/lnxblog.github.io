@@ -1,0 +1,2 @@
+I"K<p>Memory Map or mmap ia a feature in Linux that allows a process to map a device or file into its virtual address space. It is invoked via the mmap() system call. Linux adds a new virtual memory area or vm_area_struct to the address space of the process. This can be checked in the proc/<pid>/maps entry of the process.</pid></p>
+:ET

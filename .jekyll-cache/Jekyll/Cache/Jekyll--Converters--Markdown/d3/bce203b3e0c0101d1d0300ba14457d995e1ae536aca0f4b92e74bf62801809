@@ -1,0 +1,71 @@
+I"?<p>Software interrupts are synchronous interrupts. They are provided by almost all architectures as an instruction. It is generally used in the implementation of system calls. In the ARM ISA the instruction <code class="language-plaintext highlighter-rouge">svc</code> is used to invoke a software interrupt which causes the system to enter <code class="language-plaintext highlighter-rouge">supervisor mode</code> and execute the vector routine for the same. Here i will provide a concise explanation of the software interrupt routine for the ARM v7 or ARM 32-bit architecture.</p>
+
+<p><strong><em>arch/arm/kernel/entry-common.S</em></strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ENTRY(vector_swi)
+
+	[ ... ]
+
+	adr tbl, sys_call_table				@ load syscall table pointer
+	bic scno, scno, #0xff000000			@ mask off SWI op-code
+	eor scno, scno, #__NR_SYSCALL_BASE		@ check OS number
+	cmp scno, #NR_syscalls				@ check upper syscall limit
+	badr lr, ret_fast_syscall			@ return address
+	ldrcc pc, [tbl, scno, lsl #2]			@ call sys_* routine 
+	
+	[ ... ]
+	
+ENDPROC(vector_swi)
+
+	[ ... ]
+	#define NATIVE(nr, func) syscall nr, func
+	syscall_table_start sys_call_table		@ table begins
+	#define COMPAT(nr, native, compat) syscall nr, native
+	#ifdef CONFIG_AEABI
+	#include &lt;calls-eabi.S&gt;
+	#else
+	#include &lt;calls-oabi.S&gt;
+	#endif
+	#undef COMPAT
+	syscall_table_end sys_call_table		@ table ends
+	
+	[ ... ]
+</code></pre></div></div>
+<p>The <code class="language-plaintext highlighter-rouge">vector_swi</code> routine code contains multiple <code class="language-plaintext highlighter-rouge">if</code> checks and I have shown here only the part related to loading the syscall address from <code class="language-plaintext highlighter-rouge">sys_call_table</code>.
+Under the new ARM v7 EABI standard, the syscall number is stored in <code class="language-plaintext highlighter-rouge">r7</code> register. Here <code class="language-plaintext highlighter-rouge">scno</code> is a label for the <code class="language-plaintext highlighter-rouge">r7</code> register. The arguments for the system call are stored in registers <code class="language-plaintext highlighter-rouge">r0,r1,r2</code> and so on.
+The addresses of the syscalls are held in <code class="language-plaintext highlighter-rouge">sys_call_table</code>. The program counter is loaded with the syscall address from this table.</p>
+
+<p><code class="language-plaintext highlighter-rouge">Note that each sys_call_table entry is four bytes, hence the syscall number is multipled by 4 and added to the base address of the sys_call_table.</code></p>
+
+<p><strong><em>calls-eabi.S</em></strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>NATIVE(0, sys_restart_syscall)
+NATIVE(1, sys_exit)
+NATIVE(2, sys_fork)
+NATIVE(3, sys_read)
+NATIVE(4, sys_write)
+
+[ ... ]
+</code></pre></div></div>
+<p>The syscall routines are static functions whose addresses make up the <code class="language-plaintext highlighter-rouge">sys_call_table</code>. Taking the fork system call as an example,the <code class="language-plaintext highlighter-rouge">sys_call_table</code> entry is <code class="language-plaintext highlighter-rouge">sys_fork</code>. The definition of this routine is held in <code class="language-plaintext highlighter-rouge">linux/fork.c</code>. The syscall definitions like the fork here is independent of processor architecture of the underlying system.</p>
+
+<p><strong><em>kernel/fork.c</em></strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#ifdef __ARCH_WANT_SYS_FORK
+SYSCALL_DEFINE0(fork)
+{
+#ifdef CONFIG_MMU
+	return _do_fork(SIGCHLD, 0, 0, NULL, NULL, 0);
+#else
+	/* can not support in nommu mode */
+	return -EINVAL;
+#endif
+</code></pre></div></div>
+<p>Ultimately the core details of the forking process is defined in <code class="language-plaintext highlighter-rouge">_do_fork</code>
+The <code class="language-plaintext highlighter-rouge">SYSCALL_DEFINE0</code> is macro specifying that this system call accepts zero arguments. The macro is defined in <code class="language-plaintext highlighter-rouge">syscalls.h</code>.</p>
+
+<p><strong><em>include/linux/syscalls.h</em></strong></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#define SYSCALL_DEFINE0(sname)					\
+	SYSCALL_METADATA(_##sname, 0);				\
+	asmlinkage long sys_##sname(void)
+</code></pre></div></div>
+<p>Similarly for one argument <code class="language-plaintext highlighter-rouge">SYSCALL_DEFINE1</code> is used and so on. A maximum of six arguments is allowed. The file contains the definitions for the other macros which I haven’t mentioned here.
+This is my walkthrough of the software interrupt routine. Let me know if you have any questions or corrections.</p>
+:ET

@@ -1,0 +1,81 @@
+I"þ<p>There is a neat feature in Linux and I decided to write it up before I forget it. Has your system ever gone into a reset and you wished that the kernel panic logs were somehow preserved?</p>
+
+<p>We can ensure logging of kernel OOPS situations by enabling the ramoops feature present in the Linux kernel. The access to these logs is provided using the Pstore filesystem interface. I will demonstrate the setup for a Raspberry Pi board.</p>
+
+<h3 id="enable-pstore-in-the-kernel">Enable Pstore in the kernel</h3>
+<p>We will need to build the kernel with Pstore option enable. Modify the .config file to add the following option.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>CONFIG_PSTORE=y
+CONFIG_PSTORE_RAM=y
+</code></pre></div></div>
+<p>While building the kernel, you will be asked to select the compression method for the logs, ftrace support and some more extras, go ahead and provide Yes to all of them.
+Once the kernel is built, rename the zImage file as kernel7 and copy it into the boot partition of the RPiâ€™s SD card</p>
+<h3 id="add-a-device-tree-overlay">Add a Device Tree Overlay</h3>
+<p>In order for ramoops to work, we need to reserve a region of the RAM area for the logs to be stored. This is done by adding a device tree overlay which will be picked by the kernel during boot and used along with the main device tree (DTB) file.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2710";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			reserved-memory {
+				#address-cells = &lt;1&gt;;
+				#size-cells = &lt;1&gt;;
+				ranges;
+
+				ramoops: ramoops@039900000 {
+					compatible = "ramoops";
+					reg = &lt;0x39900000 0x100000&gt;; 
+					record-size = &lt;0x4000&gt;; 
+					console-size = &lt;0&gt;; /* disabled by default */
+				};
+			};
+		};
+	};
+
+	__overrides__ {
+		total-size = &lt;&amp;ramoops&gt;,"reg:4";
+		record-size = &lt;&amp;ramoops&gt;,"record-size:0";
+		console-size = &lt;&amp;ramoops&gt;,"console-size:0";
+	};
+};
+</code></pre></div></div>
+<p>The Pi that I am using comes with 1GB of RAM, so the upper limit on the physical address is <code class="language-plaintext highlighter-rouge">0x40000000</code>. I chose to create the ramoops area from <code class="language-plaintext highlighter-rouge">0x39900000</code> for a length of <code class="language-plaintext highlighter-rouge">0x100000</code>.</p>
+
+<p>Save the above contents as ramoops_overlay.dts and compile it using the Device Tree Compiler present at scripts/dtc/dtc in the kernel sources.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ./scripts/dtc/dtc -@ -I dts -O dtb -o ramoops.dtbo ramoops-overlay.dts
+</code></pre></div></div>
+<p>Copy the ramoops.dtbo file into the <code class="language-plaintext highlighter-rouge">overlays</code> folder of the boot partition of the SD card.</p>
+
+<p>Add <code class="language-plaintext highlighter-rouge">dtoverlay=ramoops</code> in the <code class="language-plaintext highlighter-rouge">config.txt</code> file and reboot the Pi.</p>
+
+<h3 id="create-a-panic">Create a Panic</h3>
+<p>Check if ramoops and pstore was enabled using the dmesg logs</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ dmesg
+
+[ ... ]
+[    0.085368] pstore: using zlib compression
+[    0.085382] pstore: Registered ramoops as persistent store backend
+[    0.085389] ramoops: attached 0x100000@0x39900000, ecc: 0/0
+[ ... ]
+</code></pre></div></div>
+<p>Test the feature by creating a kernel panic</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ sudo sh -c "echo 10 &gt; /proc/sys/kernel/panic"
+$ sudo sh -c "echo c &gt; /proc/sysrq-trigger"
+</code></pre></div></div>
+<p>Now the system will reboot. You will find the logs at <code class="language-plaintext highlighter-rouge">/sys/fs/pstore</code>. It contains details of the register state, stack memory and function backtrace.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ls -l /sys/fs/pstore
+-r--r--r-- 1 root root 21188 Mar  1 16:49 dmesg-ramoops-0
+-r--r--r-- 1 root root 25952 Mar  1 16:49 dmesg-ramoops-1
+</code></pre></div></div>
+
+<h4 id="references">References</h4>
+<ol>
+  <li><a href="https://www.kernel.org/doc/html/v4.12/admin-guide/ramoops.html">https://www.kernel.org/doc/html/v4.12/admin-guide/ramoops.html</a></li>
+  <li><a href="https://www.kernel.org/doc/Documentation/ABI/testing/pstore">https://www.kernel.org/doc/Documentation/ABI/testing/pstore</a></li>
+  <li><a href="https://www.raspberrypi.org/forums/viewtopic.php?t=199047">Raspberry Pi forums user : notro</a></li>
+</ol>
+:ET

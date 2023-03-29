@@ -1,0 +1,2 @@
+I"Ê<p>The GCC provides various levels of compiler optimization. The option can be specified by <code class="language-plaintext highlighter-rouge">-On</code> where n contains integral values {0,1,2,3}.</p>
+:ET

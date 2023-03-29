@@ -1,0 +1,90 @@
+I"E<p>Linux employs virtual addresses instead of physical addresses to isolate each process’s address space and provide greater security. But ultimately accessing the physical memory will require that the memory controller be provided with a physical address to access the physical memory.</p>
+
+<p>In order to achieve this, Linux stores a table of mappings containing virtual to physical memory mappings of each process. But this is not a simple one-to-one mapping as this would require a lot of space in the physical memory. Instead Linux uses a 3 page table approach. The virtual address bits are seperated into four distinct fields each of which helps in naviagting the page table structures
+The 3 page tables are</p>
+<ol>
+  <li>Page Global Directory (PGD)</li>
+  <li>Page Middle Directory (PMD)</li>
+  <li>Page Table Entries (PTE)</li>
+</ol>
+
+<p>Recently Linux has been updated to handle another page table between PGD and PMD called Page Upper Direcory (PUD). Note that page table implementation is architecture specific.
+But for the case of ARM 32 bit, there are only two page tables used, PGD and PTE as we will shortly see.</p>
+
+<h2 id="walking-the-table">Walking the Table</h2>
+<p>The following diagram helps explain the page table layout better.</p>
+
+<p><img src="https://www.kernel.org/doc/gorman/html/understand/understand-html006.png" alt="Linux Page tables" /></p>
+
+<p>PGD is an array of <code class="language-plaintext highlighter-rouge">pgd_t</code> members, PMD is an array of <code class="language-plaintext highlighter-rouge">pmd_t</code> members and PTE is an array of <code class="language-plaintext highlighter-rouge">pte_t</code> members.
+Each process is represented by a <code class="language-plaintext highlighter-rouge">task_struct</code> structure which contains a pointer to <code class="language-plaintext highlighter-rouge">mm_struct</code>, another structure containing information on the virtual memory areas of the process. Within <code class="language-plaintext highlighter-rouge">mm_struct</code> a pointer to its own Page Global Directory exists.
+Before reading the page tables, we acquire the page table lock member of the <code class="language-plaintext highlighter-rouge">mm_struct</code> using spinlock API.
+The kernel API offers methods required to find the offset within each table.
+The offset within the PGD table is obtained by right shifting the bits of the virtual address by <code class="language-plaintext highlighter-rouge">PGDIR_SHIFT</code> and adding the value to the PGD pointer.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pgd_offset(mm, addr) *** mm is the `mm_struct` and addr is the virtual address
+</code></pre></div></div>
+<p>From the previous step we have the PUD entry.
+To find the offset within PUD the <code class="language-plaintext highlighter-rouge">pud_offset(pgd_offset_entry, addr)</code> is used, but for ARMv7 there is no PUD table and this function simply returns the pgd offset entry from the previous step.</p>
+
+<p>Next we have PMD table and the <code class="language-plaintext highlighter-rouge">pmd_offset(pud_offset_entry, addr)</code> provides the offset entry but as I observed that this value was simply the return of the pud_offset_entry which is in turn the pgd_offset_entry.</p>
+
+<p>Finally the PTE table provides the pte_t entry containing the address to the <code class="language-plaintext highlighter-rouge">page</code> struct. The function <code class="language-plaintext highlighter-rouge">pte_offset_map(pmd_offset_entry, addr)</code> is used to handle this.
+Once we have located the page containing our address, we have to find the offset of the location within the page. Each page in ARMv7 is configured to be of 4096 bytes or 2^12. We find the offset within the page by using the lowermost 12 bits.</p>
+
+<h2 id="experiment">Experiment</h2>
+
+<p>I wanted to experiment with page tables and wrote a kernel module to perform page table traversal. It works as follows</p>
+<ol>
+  <li>Provide the process ID (PID) and address of a variable to the kernel module’s device descriptor. This can be done using the <code class="language-plaintext highlighter-rouge">echo</code> command.</li>
+  <li>The kernel module obtains the <code class="language-plaintext highlighter-rouge">task_struct</code> using the PID.</li>
+  <li>Obtain the <code class="language-plaintext highlighter-rouge">mm_struct</code> and the pgd pointer. Traverse the page tables using the page table offset APIs.</li>
+  <li>Find the page struct from the PTE entry</li>
+  <li>Perform temporary mapping of the page using <code class="language-plaintext highlighter-rouge">kmap_atomic</code> and find offset within page from the virtual address.</li>
+  <li>Read the value at the address and print the contents.</li>
+</ol>
+
+<h3 id="test-code">Test code</h3>
+<p>I used the following simple code and will try to read the contents of variable <code class="language-plaintext highlighter-rouge">a</code></p>
+<pre><code class="language-C">#include &lt;stdio.h&gt;
+
+int main()
+{
+	int a=8055;
+	printf("%p\n",&amp;a);
+	while(1);
+}
+</code></pre>
+<p>Running the program will print the address of <code class="language-plaintext highlighter-rouge">a</code></p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ./test_code &amp;
+[1] 614
+0x7e9e6c24
+</code></pre></div></div>
+
+<p>The kernel module creates a char device interface to read the user arguments. Usage is as follows</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ echo "614 7e9e6c24 " &gt; /dev/test_driver
+
+[  122.536785] test driver device opened
+[  122.537051] test driver device write 
+[  122.537227] user writes : 614 7e9e6c24
+[  122.537227]
+[  122.537364] user 1st write 614
+[  122.537384] user 2nd write 7e9e6c24
+[  122.537462] task_struct pid : 614
+[  122.537532] virt addr :2124311588 7e9e6c24
+[  122.537621] pgd pointer: c8058000 pgd entry:c8059fa0
+[  122.537745] pud pointer: c8059fa0
+[  122.537812] pmd pointer: c8059fa0
+[  122.537880] pte pointer: c8269798
+[  122.537948] page address 574a1000 physical address 574a1c24
+[  122.537974] value at address : 8055
+[  122.538079] test driver device closed / released
+</code></pre></div></div>
+<p>I have uploaded the driver code <a href="https://github.com/lnxblog/Page-Table-Walk/blob/master/page_table_walk.c">here</a>.</p>
+
+<p>References</p>
+<ol>
+  <li><a href="https://www.kernel.org/doc/gorman/html/understand/understand006.html">Linux Page Table Management</a></li>
+  <li><a href="https://elinux.org/Tims_Notes_on_ARM_memory_allocation">Tim’s Notes on ARM memory allocation</a></li>
+</ol>
+
+:ET

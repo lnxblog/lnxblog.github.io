@@ -1,0 +1,18 @@
+I"t<p>Locks are necessary constructs in multithreaded programs to gain exclusive access to shared resources. If you have written multithreaded code using POSIX API, then you may have also used the mutexes which are part of the pthread library.
+There are many possible implementations of these mutex locks:</p>
+
+<ol>
+  <li>Test-and-set lock</li>
+  <li>Ticket lock</li>
+  <li>Mellor-Crummey and Scott(MCS) lock</li>
+</ol>
+
+<p>The MCS locking mechanism minimizes cache misses in multithreaded programs using FIFO ordering for lock acquisition.
+Each thread which tries to acquire the lock and fails, enqueues itself in a linked list and waits on a thread local atomic. The lock holder releases the blocked thread by modifying the waiting thread’s atomic.</p>
+
+<p>The following image explains the FIFO ordering for incoming threads.
+<img src="/assets/images/2023/mcs.png" alt="mcs lock" />
+I have tried building a LIFO version of this lock. Each thread enqueues itself on top and waits on a local atomic. The lock holder upon release sets the top node’s atomic thus releasing it.
+<img src="/assets/images/2023/lifo.png" alt="lifo lock" /></p>
+
+:ET

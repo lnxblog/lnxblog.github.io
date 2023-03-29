@@ -1,0 +1,89 @@
+I"<p>Locks are necessary constructs in multithreaded programs to gain exclusive access to shared resources. If you have written multithreaded code using POSIX API, then you may have also used the mutexes which are part of the pthread library.
+There are many possible implementations of these mutex locks:</p>
+
+<ol>
+  <li>Test-and-set lock</li>
+  <li>Ticket lock</li>
+  <li>Mellor-Crummey and Scott(MCS) lock</li>
+</ol>
+
+<p>The MCS locking mechanism minimizes cache misses in multithreaded programs using FIFO ordering for lock acquisition.
+Each thread which tries to acquire the lock and fails, enqueues itself in a linked list and waits on a thread local atomic. The lock holder releases the blocked thread by modifying the waiting thread’s atomic.</p>
+
+<p>The following image explains the FIFO ordering for incoming threads.
+<img src="/assets/images/2023/mcs.png" alt="mcs lock" />
+I have tried building a LIFO version of this lock. Each thread enqueues itself on top and waits on a local atomic. The lock holder upon release sets the top node’s atomic thus releasing it.
+<img src="/assets/images/2023/lifo.png" alt="lifo lock" /></p>
+
+<p>Locking steps</p>
+<ol>
+  <li>Each thread gets a thread local node. Sets the turn state to false.</li>
+  <li>Tries to get the current top of the list and performs compare and exchange to set itself to top.</li>
+  <li>If the compare and exchange result shows that the previous top was NULL, then thread is the sole owner of the lock and can proceed.</li>
+  <li>If the previous top was not NULL, then must wait on turn state to be set to true by current lock holder.</li>
+</ol>
+
+<p>Unlocking steps</p>
+<ol>
+  <li>Assuming self to be top of the linked list, do compare and exchange and set next node to top.</li>
+  <li>If compare and exchange fails, then more nodes have arrived. Unlink self by setting previous node’s next to self’s next. Set current top node’s turn to true.</li>
+  <li>If compare and exchange passes, then no new nodes have arrived. Set next node’s turn to true.</li>
+</ol>
+
+<p>Code snippet as a class definition in C++</p>
+<pre><code class="language-C">/******** MCS STACK LOCK ******/
+
+void mcs_lock_s::lock()
+{
+    my_node.next.store(NULL,memory_order_relaxed);  // initialize this thread my_node
+    my_node.my_turn.store(false);
+    struct mcs_node* oldTop;
+ 
+    do{
+        
+        oldTop=top.load(memory_order_seq_cst);   // get old top
+        my_node.next.store(oldTop,memory_order_seq_cst); // set your next as old top
+        
+    }while(!top.compare_exchange_weak(oldTop,&amp;my_node,memory_order_seq_cst)); // cas top to set yourself as top
+    
+    if(oldTop==NULL)
+    {
+        // we have the lock
+    }
+    else
+    {
+        while(!my_node.my_turn.load(memory_order_seq_cst));  // wait until current top gives you the lock    
+    }
+}
+
+void mcs_lock_s::unlock()
+{
+    struct mcs_node *ref=&amp;my_node;
+    struct mcs_node *ref_next=ref-&gt;next.load(memory_order_seq_cst);
+    struct mcs_node *oldTop,*oTnext;
+    
+    if(!top.compare_exchange_strong(ref,ref_next,memory_order_seq_cst))  // cas and check if you are not top 
+    {
+        /* more threads have arrived */
+        oldTop=ref; 
+        
+        /* remove yourself by connecting previous to next */
+        while(oldTop-&gt;next.load(memory_order_seq_cst)!=&amp;my_node) 
+            oldTop=oldTop-&gt;next.load(memory_order_seq_cst);
+        oldTop-&gt;next.store(my_node.next.load(memory_order_seq_cst),memory_order_seq_cst);
+
+        /* give top node which is stored in ref the lock */
+        ref-&gt;my_turn.store(true,memory_order_seq_cst);
+        
+    }
+    else{
+        /* no other threads arrived. check if more nodes follow and provide lock to them */
+        if(ref_next!=NULL)
+            ref_next-&gt;my_turn.store(true,memory_order_seq_cst);
+        
+    }
+
+}
+</code></pre>
+
+:ET

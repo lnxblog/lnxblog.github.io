@@ -1,0 +1,3 @@
+I"3<p>Locks are necessary constructs in multithreaded programs to gain exclusive access to shared resources. If you have written multithreaded code using POSIX API, then you may have also used the mutexes which are part of the pthread library.
+There are many possible implementations of these mutex locks:</p>
+:ET

@@ -1,0 +1,13 @@
+I"ñ<p>One of the neat features of the GNU Debugger is the support for running python scripts in the GDB environment. This is helpful for logging and automating debug sessions.
+In the gdb environment we run <code class="language-plaintext highlighter-rouge">pi</code> to launch an interactive python session.
+```
+(gdb) pi</p>
+<blockquote>
+  <blockquote>
+    <blockquote>
+      <p>gdb.breakpoints()
+(&lt;gdb.Breakpoint object at 0x7f78b0c8e418&gt;,)</p>
+    </blockquote>
+  </blockquote>
+</blockquote>
+:ET

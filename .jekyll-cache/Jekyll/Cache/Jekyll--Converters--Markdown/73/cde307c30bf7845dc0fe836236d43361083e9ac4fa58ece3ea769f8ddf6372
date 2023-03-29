@@ -1,0 +1,3 @@
+I".<p>Buffer overflow attack is one of the most basic techniques used to exploit binaries which do not perform bound checks on the user’s input.
+It involves crafting the input to a program in a manner such that it overwrites adjacent memory locations and deliberately causes an unexpected behavior.</p>
+:ET

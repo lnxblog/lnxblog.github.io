@@ -1,0 +1,2 @@
+I"�<p>It’s amazing how benign things in a binary can be exploited to gain complete control of the system. In this post I describe the details of solving challenge #3 (calc) on <a href="pwnable">www.pwnable.tw</a>. My previous <code class="language-plaintext highlighter-rouge">orw</code> challenge on the pwnable involved simple stack smashing to redirect code execution to the stack. This challenge however wasn’t that simple.</p>
+:ET

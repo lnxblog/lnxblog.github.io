@@ -1,0 +1,130 @@
+I"$<p>The Global offset table (GOT) and Procedure Linkage Table (PLT) are the two data structures which form the basis for run time resolution of symbols in the ELF standard.</p>
+
+<p>The following video gives a good explanation of its usage by the dynamic linker for the Intel x86 architecture.</p>
+
+<p><a href="https://www.youtube.com/watch?v=kUk5pw4w0h4"> GOT and PLT - Youtube </a></p>
+
+<p>In this post I will post the details of its working for the ARM architecture.
+I will consider the following simple program which uses a printf statement. The printf function is defined in the libc library and the dynamic linker is responsible for resolving the printf call during runtime.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="n">printf</span><span class="p">(</span><span class="s">"hello world"</span><span class="p">);</span>
+	<span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">}</span>	
+</code></pre></div></div>
+<p>The .plt section is as follows:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Disassembly of section .plt:
+
+000102b4 &lt;printf@plt-0x14&gt;:
+   102b4:       e52de004        push    {lr}            ; (str lr, [sp, #-4]!)
+   102b8:       e59fe004        ldr     lr, [pc, #4]    ; 102c4 &lt;_init+0x1c&gt;
+   102bc:       e08fe00e        add     lr, pc, lr
+   102c0:       e5bef008        ldr     pc, [lr, #8]!
+   102c4:       00010300        .word   0x00010300
+
+000102c8 &lt;printf@plt&gt;:
+   102c8:       e28fc600        add     ip, pc, #0, 12 
+   102cc:       e28cca10        add     ip, ip, #16, 20 ; 0x10000  ip = ip + 16 &lt;&lt; 20
+   102d0:       e5bcf300        ldr     pc, [ip, #768]! ; 0x300
+   
+   [.]
+ 
+   00010420 &lt;main&gt;:
+   10420:       e92d4800        push    {fp, lr}
+   10424:       e28db004        add     fp, sp, #4
+   10428:       e24dd008        sub     sp, sp, #8
+   1042c:       e59f300c        ldr     r3, [pc, #12]   ; 10440 &lt;main+0x20&gt;
+   10430:       e50b3008        str     r3, [fp, #-8]
+   10434:       e59f0004        ldr     r0, [pc, #4]    ; 10440 &lt;main+0x20&gt;
+   10438:       ebffffa2        bl      102c8 &lt;printf@plt&gt;
+   
+   [.]
+   
+Disassembly of section .got:
+
+000205c4 &lt;_GLOBAL_OFFSET_TABLE_&gt;:
+   205c4:       000204dc        ldrdeq  r0, [r2], -ip
+        ...
+   205d0:       000102b4                        ; &lt;UNDEFINED&gt; instruction: 0x000102b4
+   205d4:       000102b4                        ; &lt;UNDEFINED&gt; instruction: 0x000102b4
+   205d8:       000102b4                        ; &lt;UNDEFINED&gt; instruction: 0x000102b4
+   205dc:       000102b4                        ; &lt;UNDEFINED&gt; instruction: 0x000
+
+</code></pre></div></div>
+
+<p>From main printf causes branching to <code class="language-plaintext highlighter-rouge">0x102c8</code> which is the plt for printf.</p>
+<ol>
+  <li>In the first instruction the value of <code class="language-plaintext highlighter-rouge">pc</code> which is <code class="language-plaintext highlighter-rouge">0x102d0</code> to be copied into <code class="language-plaintext highlighter-rouge">ip</code></li>
+  <li>
+    <p>The next instruction is the following expression</p>
+
+    <p><code class="language-plaintext highlighter-rouge">ip = ip + 16 &lt;&lt; (32 - 12)</code></p>
+  </li>
+  <li>Finally in the third instruction <code class="language-plaintext highlighter-rouge">pc</code> is loaded with the value <code class="language-plaintext highlighter-rouge">0x102b4</code> from the GOT entry for printf@plt <code class="language-plaintext highlighter-rouge">0x205d0</code>.</li>
+  <li>At <code class="language-plaintext highlighter-rouge">0x102b4</code> the <code class="language-plaintext highlighter-rouge">printf@plt-0x14</code> stub is used to invoke the dynamic linker.</li>
+  <li>It begins by pushing <code class="language-plaintext highlighter-rouge">lr</code> onto the stack.</li>
+  <li>Next instruction loads <code class="language-plaintext highlighter-rouge">lr</code> with content at <code class="language-plaintext highlighter-rouge">pc + 4</code>.</li>
+  <li>Next <code class="language-plaintext highlighter-rouge">lr = lr + pc</code>  which results in <code class="language-plaintext highlighter-rouge">lr = 0x10300 + 0x102c4 = 0x205c4</code></li>
+  <li>Next pc is loaded with the value located at <code class="language-plaintext highlighter-rouge">lr + 8</code></li>
+</ol>
+
+<p>You can use GDB to examine the memory contents.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pi@raspberrypi:~/c_progs $ gdb -q a.out
+Reading symbols from a.out...(no debugging symbols found)...done.
+(gdb) p/x *0x205d0
+$1 = 0x102b4
+(gdb) p/x *0x205cc
+$2 = 0x0
+(gdb) b main
+Breakpoint 1 at 0x10420
+(gdb) r
+Starting program: /home/pi/c_progs/a.out
+
+Breakpoint 1, 0x00010420 in main ()
+(gdb) p/x *0x205cc
+$3 = 0x76fe5544
+
+(gdb) info proc mappings
+process 1446
+Mapped address spaces:
+
+        Start Addr   End Addr       Size     Offset objfile
+           0x10000    0x11000     0x1000        0x0 /home/pi/c_progs/a.out
+           0x20000    0x21000     0x1000        0x0 /home/pi/c_progs/a.out
+        0x76e66000 0x76f91000   0x12b000        0x0 /lib/arm-linux-gnueabihf/libc-2.19.so
+        0x76f91000 0x76fa1000    0x10000   0x12b000 /lib/arm-linux-gnueabihf/libc-2.19.so
+        0x76fa1000 0x76fa3000     0x2000   0x12b000 /lib/arm-linux-gnueabihf/libc-2.19.so
+        0x76fa3000 0x76fa4000     0x1000   0x12d000 /lib/arm-linux-gnueabihf/libc-2.19.so
+        0x76fa4000 0x76fa7000     0x3000        0x0
+        0x76fba000 0x76fbf000     0x5000        0x0 /usr/lib/arm-linux-gnueabihf/libarmmem.so
+        0x76fbf000 0x76fce000     0xf000     0x5000 /usr/lib/arm-linux-gnueabihf/libarmmem.so
+        0x76fce000 0x76fcf000     0x1000     0x4000 /usr/lib/arm-linux-gnueabihf/libarmmem.so
+        0x76fcf000 0x76fef000    0x20000        0x0 /lib/arm-linux-gnueabihf/ld-2.19.so
+---Type &lt;return&gt; to continue, or q &lt;return&gt; to quit---
+        0x76ff7000 0x76ffb000     0x4000        0x0
+        0x76ffb000 0x76ffc000     0x1000        0x0 [sigpage]
+        0x76ffc000 0x76ffd000     0x1000        0x0 [vvar]
+        0x76ffd000 0x76ffe000     0x1000        0x0 [vdso]
+        0x76ffe000 0x76fff000     0x1000    0x1f000 /lib/arm-linux-gnueabihf/ld-2.19.so
+        0x76fff000 0x77000000     0x1000    0x20000 /lib/arm-linux-gnueabihf/ld-2.19.so
+        0x7efdf000 0x7f000000    0x21000        0x0 [stack]
+        0xffff0000 0xffff1000     0x1000        0x0 [vectors]
+(gdb) c
+Continuing.
+^C
+Program received signal SIGINT, Interrupt.
+0x0001043c in main ()
+(gdb) p/x *0x205d0
+$4 = 0x76eaf2a0
+(gdb)
+</code></pre></div></div>
+
+<p>You can observe that the GOT entry for printf@plt is updated after making the first call to printf@plt-0x14.</p>
+
+<p>First call goes through printf@plt-0x14 for all functions which are part of shared object libraries. This stub invokes the dynamic linker which resolves the address of the external function like printf in this case and actually calls the printf function.</p>
+
+<p>Subsequent calls directly invoke the function definition instead of invoking the dynamic linker as the address of the function is now stored in the GOT.</p>
+:ET

@@ -1,0 +1,158 @@
+I"�+<p>Memory Map or mmap ia a feature in Linux that allows a process to map a device or file into its virtual address space. It is invoked via the mmap() system call. Linux adds a new virtual memory area or vm_area_struct to the address space of the process. This can be checked in the proc/<pid>/maps entry of the process.</pid></p>
+
+<p>From the man page:</p>
+
+<pre><code class="language-C">void *mmap(void *addr, size_t length, int prot, int flags,
+                  int fd, off_t offset);
+</code></pre>
+
+<p>mmap() returns a pointer to the beginning of the virtual address of the mapped area.
+In case the mapping fails, MAP_FAILED is returned.</p>
+
+<hr />
+
+<p>Internally Linux calls <code class="language-plaintext highlighter-rouge">sys_mmap2</code> routine. Below is the code for an ARM 32-bit machine. This is arch specific code. The subsequent functions are generic.</p>
+
+<h3 id="archarmkernelentry-commons">arch/arm/kernel/entry-common.S</h3>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sys_mmap2:
+#if PAGE_SHIFT &gt; 12
+		tst	r5, #PGOFF_MASK
+		moveq	r5, r5, lsr #PAGE_SHIFT - 12
+		streq	r5, [sp, #4]
+		beq	sys_mmap_pgoff
+		mov	r0, #-EINVAL
+		mov	pc, lr
+#else
+		str	r5, [sp, #4]
+		b	sys_mmap_pgoff
+#endif
+ENDPROC(sys_mmap2)
+</code></pre></div></div>
+<p>The next routine is sys_mmap_pgoff which internally invokes <code class="language-plaintext highlighter-rouge">ksys_mmap_pgoff</code> in <code class="language-plaintext highlighter-rouge">mm/mmap.c</code>. <code class="language-plaintext highlighter-rouge">ksys_mmap_pgoff</code> performs some checks before finally calling <code class="language-plaintext highlighter-rouge">vm_mmap_pgoff</code> located in <code class="language-plaintext highlighter-rouge">mm/util.c</code></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>unsigned long ksys_mmap_pgoff(unsigned long addr, unsigned long len,
+			      unsigned long prot, unsigned long flags,
+			      unsigned long fd, unsigned long pgoff)
+{
+	[...]
+
+	retval = vm_mmap_pgoff(file, addr, len, prot, flags, pgoff);
+	return retval;
+}
+
+SYSCALL_DEFINE6(mmap_pgoff, unsigned long, addr, unsigned long, len,
+		unsigned long, prot, unsigned long, flags,
+		unsigned long, fd, unsigned long, pgoff)
+{
+	return ksys_mmap_pgoff(addr, len, prot, flags, fd, pgoff);
+}
+</code></pre></div></div>
+<p>Inside <code class="language-plaintext highlighter-rouge">vm_mmap_pgoff</code> mm-&gt;mmap_sem is acquired before calling <code class="language-plaintext highlighter-rouge">do_mmap_pgoff</code>  function in again in <code class="language-plaintext highlighter-rouge">mm/mmap.c</code>.</p>
+
+<p><code class="language-plaintext highlighter-rouge">do_mmap_pgoff</code> performs checks on the flags parameter and will call the device or file specific <code class="language-plaintext highlighter-rouge">get_unmapped_area</code> to allocate memory for the mapping.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">do_mmap_pgoff</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">,</span>
+			<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">len</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">prot</span><span class="p">,</span>
+			<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">flags</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">pgoff</span><span class="p">,</span>
+			<span class="kt">unsigned</span> <span class="kt">long</span> <span class="o">*</span><span class="n">populate</span><span class="p">)</span>
+<span class="p">{</span>
+	
+	<span class="p">[...]</span>
+	
+	<span class="n">addr</span> <span class="o">=</span> <span class="n">get_unmapped_area</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">pgoff</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+
+	<span class="p">[...]</span>
+
+	<span class="n">addr</span> <span class="o">=</span> <span class="n">mmap_region</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">addr</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">vm_flags</span><span class="p">,</span> <span class="n">pgoff</span><span class="p">);</span> <span class="c1">// addr used by vm_area_struct</span>
+
+	<span class="p">[...]</span>
+	<span class="k">return</span> <span class="n">addr</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Next <code class="language-plaintext highlighter-rouge">mmap_region()</code> function is invoked which allocates a <code class="language-plaintext highlighter-rouge">vm_area_struct</code> from the slab allocator. 
+Finally the device specific or filesystem <code class="language-plaintext highlighter-rouge">mmap()</code> function is invoked.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">mmap_region</span><span class="p">(</span><span class="k">struct</span> <span class="n">file</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">addr</span><span class="p">,</span>
+		<span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">len</span><span class="p">,</span> <span class="n">vm_flags_t</span> <span class="n">vm_flags</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">pgoff</span><span class="p">)</span>
+<span class="p">{</span>
+
+	<span class="n">vma</span> <span class="o">=</span> <span class="n">kmem_cache_zalloc</span><span class="p">(</span><span class="n">vm_area_cachep</span><span class="p">,</span> <span class="n">GFP_KERNEL</span><span class="p">);</span>
+	<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">vma</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">error</span> <span class="o">=</span> <span class="o">-</span><span class="n">ENOMEM</span><span class="p">;</span>
+		<span class="k">goto</span> <span class="n">unacct_error</span><span class="p">;</span>
+	<span class="p">}</span>
+
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_mm</span> <span class="o">=</span> <span class="n">mm</span><span class="p">;</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_start</span> <span class="o">=</span> <span class="n">addr</span><span class="p">;</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_end</span> <span class="o">=</span> <span class="n">addr</span> <span class="o">+</span> <span class="n">len</span><span class="p">;</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_flags</span> <span class="o">=</span> <span class="n">vm_flags</span><span class="p">;</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_page_prot</span> <span class="o">=</span> <span class="n">vm_get_page_prot</span><span class="p">(</span><span class="n">vm_flags</span><span class="p">);</span>
+	<span class="n">vma</span><span class="o">-&gt;</span><span class="n">vm_pgoff</span> <span class="o">=</span> <span class="n">pgoff</span><span class="p">;</span>
+
+	<span class="p">[...]</span>
+	
+	<span class="n">error</span> <span class="o">=</span> <span class="n">file</span><span class="o">-&gt;</span><span class="n">f_op</span><span class="o">-&gt;</span><span class="n">mmap</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">vma</span><span class="p">);</span>
+	
+	<span class="p">[...]</span>
+	
+</code></pre></div></div>
+
+<p>So where does the mmap routine ulimately begin.</p>
+<h3 id="if-a-device-wants-to-allow-user-to-memory-map-the-device-memory-area-then-it-must-have-a-mmap-routine-written-as-part-of-the-driver-code">If a device wants to allow user to memory map the device memory area then it must have a mmap routine written as part of the driver code.</h3>
+<p>This doesn’t apply when mapping files because Linux provides a built-in mmap routine for that.</p>
+
+<p>So now I will describe a simple mmap routine in a device driver.</p>
+
+<p>The intented use of mmap in a device driver is to provide  user space access to a memory area allocated inside a driver routine.
+So I have allocated some memory using the <code class="language-plaintext highlighter-rouge">kalloc()</code> function in the <code class="language-plaintext highlighter-rouge">initfunction</code> of the driver and copied ‘hello world’ string into the area.</p>
+
+<pre><code class="language-C">
+    ptr = kmalloc(4096,GFP_KERNEL);
+	if (!ptr)
+	{
+		printk(KERN_EMERG "memory allocation failed");
+		return -ENOMEM;
+	}
+    strcpy(ptr,"hello world\n");
+</code></pre>
+
+<p>Next inside the mmap routine, the <code class="language-plaintext highlighter-rouge">remap_pfn_page</code> maps a contiguous physical address space represented by the <code class="language-plaintext highlighter-rouge">ptr</code> which we allocated in the <code class="language-plaintext highlighter-rouge">initfunction</code> into the virtual space represented by vm_area_struct.</p>
+
+<pre><code class="language-C">static ssize_t dummy_fop_mmap(struct file *filp, struct vm_area_struct *vma)
+{
+	long addr=ptr;
+	if (remap_pfn_range(vma, vma-&gt;vm_start,virt_to_phys(addr)&gt;&gt;PAGE_SHIFT,4096,vma-&gt;vm_page_prot))
+	{
+		printk("hemanth device mmap error");
+		return -EAGAIN;
+	}
+    return 0;
+
+}
+</code></pre>
+<p>Next populate file operations structure with a pointer to the mmap routine.</p>
+
+<pre><code class="language-C">static const struct file_operations hemanth_fops = {
+	.owner = THIS_MODULE,
+	.open = dummy_fop_open,
+	.release = dummy_fop_release,
+	.read = dummy_fop_read,
+	.write = dummy_fop_write,
+	.mmap = dummy_fop_mmap
+};
+</code></pre>
+
+<p>So now when we do mmap on the file descriptor for the driver from user-space, we can read get content stored in the area, which in this case is ‘hello world’.</p>
+
+<p>I have uploaded the driver code and user space mmap code <a href="https://github.com/lnxblog/mmap_demo">here</a>.</p>
+
+<p>Feel free to comment.</p>
+
+<p>References</p>
+<ol>
+  <li><a href="https://lwn.net/Kernel/LDD3/">Linux device drivers</a></li>
+  <li><a href="https://linux-kernel-labs.github.io/master/labs/memory_mapping.html">https://linux-kernel-labs.github.io/master/labs/memory_mapping.html</a></li>
+</ol>
+
+:ET

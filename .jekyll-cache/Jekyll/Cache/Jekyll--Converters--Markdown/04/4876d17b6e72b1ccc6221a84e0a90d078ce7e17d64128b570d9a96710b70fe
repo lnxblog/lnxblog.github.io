@@ -1,0 +1,3 @@
+I"„<p>U-boot is a bootloader primarily used in embedded systems to boot the kernel. In this article I will describe the steps required to build and deploy U-boot for an ARM based machine. Thanks to QEMU for ARM thereâ€™s no need for any physical hardware. QEMU is a free and open source hardware emulator.
+You can read more about U-boot and QEMU from their respective official websites.</p>
+:ET

@@ -1,0 +1,84 @@
+I"<p>The GCC provides various levels of compiler optimization. The option can be specified by <code class="language-plaintext highlighter-rouge">-On</code> where n contains integral values {0,1,2,3}.</p>
+
+<p><code class="language-plaintext highlighter-rouge">-O0</code>
+Reduce compilation time and make debugging produce the expected results. This is the default.</p>
+
+<p><code class="language-plaintext highlighter-rouge">-O1</code>
+Low level optimization. The compiler tries to reduce code size and execution time, without performing any optimizations that take a great deal of compilation time.</p>
+
+<p><code class="language-plaintext highlighter-rouge">-O2</code>
+Medium level optimization. GCC performs nearly all supported optimizations that do not involve a space-speed tradeoff. As compared to -O1, this option increases both compilation time and the performance of the generated code.</p>
+
+<p><code class="language-plaintext highlighter-rouge">-O3</code>
+High level optimization. -O3 turns on all optimizations specified by -O2 and some additional optimizations, which increases the total compilation time.</p>
+
+<p>Consider the following C code snippet:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">flag</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="k">while</span><span class="p">(</span><span class="n">flag</span><span class="p">);</span>
+<span class="p">}</span>	
+</code></pre></div></div>
+
+<p>The following is the disassembly for an ARM architecture based device like the Raspberry Pi.
+It is compiled with <code class="language-plaintext highlighter-rouge">-O0</code> optimization.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    8424:	e59f301c 	ldr	r3, [pc, #28]	; 8448 &lt;main+0x30&gt;
+    8428:	e5933000 	ldr	r3, [r3]
+    842c:	e3530000 	cmp	r3, #0
+    8430:	1afffffb 	bne	8424 &lt;main+0xc&gt;
+</code></pre></div></div>
+<p>Register <code class="language-plaintext highlighter-rouge">R3</code> is loaded with the global variable <code class="language-plaintext highlighter-rouge">flag</code>’s value. It is compared with zero and if not equal it branches to the <code class="language-plaintext highlighter-rouge">0x8424</code> to repeat the procedure again.</p>
+
+<p>The following is the disassembly under <code class="language-plaintext highlighter-rouge">O3</code> optimization.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    82f4:	e59f3020 	ldr	r3, [pc, #32]	; 831c &lt;main+0x28&gt;
+    82f8:	e92d4010 	push	{r4, lr}
+    82fc:	e5934000 	ldr	r4, [r3]
+    8300:	e3540000 	cmp	r4, #0
+    8304:	0a000000 	beq	830c &lt;main+0x18&gt;
+    8308:	eafffffe 	b	8308 &lt;main+0x14&gt;
+</code></pre></div></div>
+<p>Note the instruction at <code class="language-plaintext highlighter-rouge">0x8308</code> the code branches to itself which although seems odd is the correct behavior expected from our program. It is faster too as there is no memory address being accessed like the previous code.</p>
+
+<p>We can avoid this kind of optimization by using a function in another source file to return the <code class="language-plaintext highlighter-rouge">flag</code> variable value.</p>
+
+<p>file1.c</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="k">while</span><span class="p">(</span><span class="n">check_var</span><span class="p">());</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>file2.c</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="n">flag</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="nf">check_var</span><span class="p">()</span>
+<span class="p">{</span>
+	<span class="k">return</span> <span class="n">flag</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>Now when after compiling the above two source files to produce the executable and disassemble <code class="language-plaintext highlighter-rouge">main</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;main&gt;
+    [.]
+    8424:	eb000008 	bl	844c &lt;check_var&gt;
+    8428:	e1a03000 	mov	r3, r0
+    842c:	e3530000 	cmp	r3, #0
+    8430:	1afffffb 	bne	8424 &lt;main+0xc&gt;
+    [.]
+</code></pre></div></div>
+<p>Similarly for <code class="language-plaintext highlighter-rouge">check_var</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>&lt;check_var&gt;
+    844c:	e52db004 	push	{fp}		; (str fp, [sp, #-4]!)
+    8450:	e28db000 	add	fp, sp, #0
+    8454:	e59f3010 	ldr	r3, [pc, #16]	; 846c &lt;check_var+0x20&gt;
+    8458:	e5933000 	ldr	r3, [r3]
+    845c:	e1a00003 	mov	r0, r3
+    8460:	e24bd000 	sub	sp, fp, #0
+    8464:	e49db004 	pop	{fp}		; (ldr fp, [sp], #4)
+    8468:	e12fff1e 	bx	lr
+    846c:	00010614 	andeq	r0, r1, r4, lsl r6
+</code></pre></div></div>
+
+<p>Register <code class="language-plaintext highlighter-rouge">R0</code> is used to store the return value.
+Now the program is forced to load the variable with the value at the memory address and is thus not optimized away.</p>
+:ET

