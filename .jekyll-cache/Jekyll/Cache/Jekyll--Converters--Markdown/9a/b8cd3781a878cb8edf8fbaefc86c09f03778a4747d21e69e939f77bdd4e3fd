@@ -1,0 +1,43 @@
+I"<p>Simple kernel modules are a good way to get acquainted with writing programs in the kernel space. But as embedded programmers we eventually would like to interact with peripheral sensors through interfaces like I2C and SPI. One such sensor which I have tried to work with and explain more about in this article is the BME280 sensor which measures pressure, temperature and humidity.</p>
+
+<p>For this example, I have only performed the temperature measurement and exposed the same through a sysfs interface.</p>
+
+<h2 id="the-sensor">The Sensor</h2>
+<p>The BME280 provides an I2C interface for reading and writing data. For this demo you will need to hook it up to the I2C pins on your Embedded Linux board like the Raspberry Pi which I have done in my case.</p>
+
+<h3 id="operation">Operation</h3>
+<p>A few basic operations in your sensor initialization would be to verify the device id and reset the sensor before usage.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The BME280 output consists of the ADC output values. However, each sensing element behaves differently. 
+Therefore, the actual pressure and temperature must be calculated using a set of calibration parameters.
+</code></pre></div></div>
+<p>For temperature calibration there are three parameter which are used for the final temperature calculation. The reference manual provides a code snippet demonstrating the same.</p>
+
+<pre><code class="language-C">// Returns temperature in DegC, resolution is 0.01 DegC. Output value of “5123” equals 51.23 DegC.
+// t_fine carries fine temperature as global value
+// dig_T1, dig_T2, dig_T3 are the calibration parameters.
+BME280_S32_t t_fine;
+BME280_S32_t BME280_compensate_T_int32(BME280_S32_t adc_T)
+{
+    BME280_S32_t var1, var2, T;
+    var1 = ((((adc_T&gt;&gt;3) – ((BME280_S32_t)dig_T1&lt;&lt;1))) * ((BME280_S32_t)dig_T2)) &gt;&gt; 11;
+    var2 = (((((adc_T&gt;&gt;4) – ((BME280_S32_t)dig_T1)) * ((adc_T&gt;&gt;4) – ((BME280_S32_t)dig_T1))) &gt;&gt; 12) *
+    ((BME280_S32_t)dig_T3)) &gt;&gt; 14;
+    t_fine = var1 + var2;
+    T = (t_fine * 5 + 128) &gt;&gt; 8;
+    return T;
+}
+</code></pre>
+<p>The <strong>config</strong> register sets the rate, filter and interface options of the device. I have set it to disable the SPI and IIR filter.</p>
+
+<p>The raw temperature values are captured in the <strong>temp_msb</strong>, <strong>temp_lsb</strong> and <strong>temp_xlsb</strong> 8-bit registers. These values need to be bit shifted to form the final 32-bit value.</p>
+
+<p>The <strong>ctrl_meas</strong> register sets the pressure and temperature data acquisition options of the device. It also controls the operating mode of the sensor. I have configured it be used in forced mode.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>In forced mode, a single measurement is performed in accordance to the selected
+measurement and filter options. When the measurement is finished, the sensor returns to sleep
+mode and the measurement results can be obtained from the data registers. For a next
+measurement, forced mode needs to be selected again.
+</code></pre></div></div>
+<p>So each time I try to read the sensor, I have to configure <strong>ctrl_meas</strong> register to enter forced mode.</p>
+
+:ET

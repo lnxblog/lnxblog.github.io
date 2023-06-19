@@ -1,0 +1,2 @@
+I"†<p>Simple kernel modules are a good way to get acquainted with writing programs in the kernel space. But as embedded programmers we eventually would like to interact with peripheral sensors through interfaces like I2C and SPI. One such sensor which I have tried to work with and explain more about in this article is the BME280 sensor which measures pressure, temperature and humidity.</p>
+:ET
